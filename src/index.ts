@@ -157,15 +157,11 @@ export default class FirestoreSearch {
         let query: Query<IndexEntity> | firebase.firestore.Query<IndexEntity> = this.indexRef;
 
         let fields = options?.fields;
-        functions.logger.log("fields")
-        functions.logger.log(fields)
         if (fields) {
             query = query.where(`${keys.tokens}.${keys.field}`, "in", fields);
         }
 
         const _searchQuery = nGram(this.options.n, searchQuery);
-        functions.logger.log("_searchQuery")
-        functions.logger.log(_searchQuery)
         _searchQuery.forEach(word => {
             query = query.where(`${keys.tokens}.${word}`, "==", true);
         })
@@ -174,7 +170,6 @@ export default class FirestoreSearch {
         if (snap.empty)
             return {hits: []};
         const hits = snap.docs.map(doc => doc.data().ref);
-        functions.logger.log(hits.map(hit => hit.id))
         return {hits: Array.from(new Set(hits))};
     }
 }
