@@ -72,7 +72,7 @@ export default class FirestoreSearch {
     private readonly db?: Firestore;
     private readonly indexRef: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>;
     private readonly isAdmin: boolean;
-    private n: number;
+    private readonly n: number;
 
     constructor(ref: CollectionReference | firebase.firestore.CollectionReference, options?: Options) {
         if (ref instanceof CollectionReference) {
