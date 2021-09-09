@@ -11,5 +11,5 @@ npm install firestore-search
 ```
 
 ## Caution
-*DON'T use field name that starts with "__" in firestore document.
+*DON'T use field name that starts with "__" in firestore document.  
 *Only search function runs on client. set function can only run with Admin SDK.
