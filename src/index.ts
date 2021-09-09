@@ -45,7 +45,8 @@ const ClientIndexEntityConverter: firebase.firestore.FirestoreDataConverter<Inde
 }
 
 export type Options = {
-    n: number;
+    n?: number;
+    db?: Firestore;
 }
 
 export type SetOptions = {
@@ -71,22 +72,23 @@ export default class FirestoreSearch {
     private readonly db?: Firestore;
     private readonly indexRef: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>;
     private readonly isAdmin: boolean;
-    private options: Options;
+    private n: number;
 
-    constructor(ref: CollectionReference | firebase.firestore.CollectionReference, options?: Options, db?: Firestore) {
+    constructor(ref: CollectionReference | firebase.firestore.CollectionReference, options?: Options) {
         if (ref instanceof CollectionReference) {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(AdminIndexEntityConverter);
             this.isAdmin = true;
+            const db = options?.db;
             if (db) {
                 this.db = db;
             } else {
-                console.error("Set Firestore while using FirestoreSearch with Admin SDK.")
+                console.error("Set Firestore database while using FirestoreSearch with Admin SDK.")
             }
         } else {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(ClientIndexEntityConverter);
             this.isAdmin = false;
         }
-        this.options = options ?? {n: 3};
+        this.n = options?.n ?? 3;
     }
 
     async set(docRef: DocumentReference, options?: SetOptions) {
@@ -120,7 +122,7 @@ export default class FirestoreSearch {
             Array.from(targetFields.values())
                 .forEach(field => {
                     const tokens = new Map<string, string | boolean>();
-                    const nGrams = nGram(this.options.n, _data[field]);
+                    const nGrams = nGram(this.n, _data[field]);
                     nGrams.forEach(nGram => {
                         if (!nGram.startsWith("__"))
                             tokens.set(nGram, true);
@@ -161,7 +163,7 @@ export default class FirestoreSearch {
             query = query.where(`${keys.tokens}.${keys.field}`, "in", fields);
         }
 
-        const _searchQuery = nGram(this.options.n, searchQuery);
+        const _searchQuery = nGram(this.n, searchQuery);
         _searchQuery.forEach(word => {
             query = query.where(`${keys.tokens}.${word}`, "==", true);
         })
