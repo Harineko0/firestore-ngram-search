@@ -1,15 +1,14 @@
 {
   "name": "firestore-search",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Search firestore documents by text.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublishOnly": "npm run build"
   },
   "files": ["dist"],
-  "keywords": [],
+  "keywords": ["firebase", "firestore", "search"],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -20,5 +19,8 @@
   "devDependencies": {
     "ts-loader": "^9.2.5",
     "typescript": "^4.4.2"
+  },
+  "bugs": {
+    "url": "https://github.com/Harineko0/firestore-search/issues"
   }
 }
