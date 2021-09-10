@@ -8,7 +8,7 @@ import {
 import {nGram} from "./nGram"
 import * as functions from 'firebase-functions';
 import firebase from "firebase/compat";
-import {getData, getTargetFields, SearchQuery} from "./utils/firestore";
+import {docID, getData, getTargetFields, SearchQuery} from "./utils/firestore";
 import {WriteBatch2} from "firestore-full-text-search/lib/utils/firestore";
 import * as console from "console";
 
@@ -67,6 +67,12 @@ export type SetOptions = {
     fields?: string[];
 }
 
+export type DeleteOptions = {
+    batch?: WriteBatch;
+    data?: DocumentData;
+    fields?: string[];
+}
+
 export type SearchOptions = {
     fields?: string[];
     limit?: number;
@@ -77,10 +83,6 @@ export type SearchResult = {
     data: DocumentData[];
 }
 
-export type DeleteOptions = {
-    data?: DocumentData;
-    fields?: string[];
-}
 
 export default class FirestoreSearch {
     private readonly db?: Firestore;
@@ -110,7 +112,7 @@ export default class FirestoreSearch {
             const data = await getData(docRef, options?.data);
             const targetFields = getTargetFields(data, options?.fields);
 
-            const keyIndex: Map<string, IndexEntity> = new Map<string, IndexEntity>();
+            const fieldIndex: Map<string, IndexEntity> = new Map<string, IndexEntity>();
             Array.from(targetFields.values())
                 .forEach(field => {
                     const tokens = new Map<string, string | boolean>();
@@ -126,14 +128,14 @@ export default class FirestoreSearch {
                         __tokens: tokens,
                         ...data,
                     };
-                    keyIndex.set(field, entity);
+                    fieldIndex.set(field, entity);
                 });
 
             if (this.db) {
                 const batch = new WriteBatch2(this.db, {batch: options?.batch});
-                for (const [key, entity] of keyIndex) {
+                for (const [field, entity] of fieldIndex) {
                     if (this.indexRef instanceof CollectionReference)
-                        batch.set(this.indexRef.doc(docRef.id + "." + key), entity)
+                        batch.set(this.indexRef.doc(docID(docRef.id, field)), entity)
                 }
                 try {
                     await batch.commit();
@@ -150,8 +152,20 @@ export default class FirestoreSearch {
         if (!this.isAdmin) {
             this.logger.error("You can only use FirestoreSearch.delete() with Admin SDK.")
         } else {
-            const data = getData(docRef, options?.data)
+            const data = await getData(docRef, options?.data)
             const targetFields = getTargetFields(data, options?.fields);
+            if (this.db) {
+                const batch = new WriteBatch2(this.db, {batch: options?.batch});
+                targetFields.forEach(field => {
+                    if (this.indexRef instanceof CollectionReference)
+                        batch.delete(this.indexRef.doc(docID(docRef.id, field)))
+                })
+                try {
+                    await batch.commit();
+                } catch (e) {
+                    this.logger.error(e);
+                }
+            }
         }
     }
 

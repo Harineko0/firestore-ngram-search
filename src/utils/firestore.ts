@@ -39,6 +39,10 @@ export function getTargetFields(data: DocumentData, fieldsOrUndef?: string[]): S
     return targetFields;
 }
 
+export function docID(refID: string, field: string) {
+    return refID + "." + field
+}
+
 type OrderByDirection = 'desc' | 'asc';
 
 type WhereFilterOp =
