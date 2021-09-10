@@ -1,6 +1,6 @@
 {
   "name": "firestore-search",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Search firestore documents quickly.",
   "main": "dist/index.js",
   "scripts": {
