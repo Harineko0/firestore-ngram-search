@@ -13,6 +13,7 @@ import {WriteBatch2} from "./utils/batch";
 export interface IndexEntity {
     __ref: DocumentReference;
     __tokens: Map<string, string | boolean>;
+    values: object;
 }
 
 export const fieldPaths = {
@@ -23,14 +24,17 @@ export const fieldPaths = {
 const IndexEntityConverter = {
     toFirestore(object: IndexEntity) {
         return {
+            ...object.values,
             __ref: object.__ref,
             __tokens: Object.fromEntries(object.__tokens),
         }
     },
     fromFirestore(data: DocumentData | firebase.firestore.DocumentData): IndexEntity {
+        const {__ref: {} = {}, __tokens: {} = {}, ...values} = data;
         return {
             __ref: data.__ref,
             __tokens: data.__tokens,
+            values: values,
         } as IndexEntity;
     }
 }
@@ -97,7 +101,7 @@ export default class FirestoreSearch {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(ClientIndexEntityConverter);
             this.isAdmin = false;
         }
-        this.n = options?.n ?? 3;
+        this.n = options?.n ?? 2;
     }
 
     async set(docRef: DocumentReference, options?: SetOptions) {
@@ -121,7 +125,9 @@ export default class FirestoreSearch {
                     const entity: IndexEntity = {
                         __ref: docRef,
                         __tokens: tokens,
-                        ...data,
+                        values: {
+                            ...data,
+                        }
                     };
                     fieldIndex.set(field, entity);
                 });
