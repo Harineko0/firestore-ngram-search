@@ -10,25 +10,6 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -98,7 +79,6 @@ var firestore_1 = require("@google-cloud/firestore");
 var nGram_1 = require("./nGram");
 var firestore_2 = require("./utils/firestore");
 var firestore_3 = require("firestore-full-text-search/lib/utils/firestore");
-var console = __importStar(require("console"));
 exports.fieldPaths = {
     tokens: "__tokens",
     field: "__field",
@@ -149,15 +129,14 @@ var FirestoreSearch = /** @class */ (function () {
     }
     FirestoreSearch.prototype.set = function (docRef, options) {
         return __awaiter(this, void 0, void 0, function () {
-            var data_1, targetFields, fieldIndex_2, batch, fieldIndex_1, fieldIndex_1_1, _a, field, entity, e_1;
-            var e_2, _b;
+            var data_1, targetFields, fieldIndex_2, batch, fieldIndex_1, fieldIndex_1_1, _a, field, entity;
+            var e_1, _b;
             var _this = this;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         if (!!this.isAdmin) return [3 /*break*/, 1];
-                        console.error("You can only use FirestoreSearch.set() with Admin SDK.");
-                        return [3 /*break*/, 8];
+                        throw new Error("You can only use FirestoreSearch.set() with Admin SDK.");
                     case 1: return [4 /*yield*/, (0, firestore_2.getData)(docRef, options === null || options === void 0 ? void 0 : options.data)];
                     case 2:
                         data_1 = _c.sent();
@@ -175,7 +154,7 @@ var FirestoreSearch = /** @class */ (function () {
                             var entity = __assign({ __ref: docRef, __tokens: tokens }, data_1);
                             fieldIndex_2.set(field, entity);
                         });
-                        if (!this.db) return [3 /*break*/, 7];
+                        if (!this.db) return [3 /*break*/, 4];
                         batch = new firestore_3.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
                         try {
                             for (fieldIndex_1 = __values(fieldIndex_2), fieldIndex_1_1 = fieldIndex_1.next(); !fieldIndex_1_1.done; fieldIndex_1_1 = fieldIndex_1.next()) {
@@ -184,65 +163,47 @@ var FirestoreSearch = /** @class */ (function () {
                                     batch.set(this.indexRef.doc((0, firestore_2.docID)(docRef.id, field)), entity);
                             }
                         }
-                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
                         finally {
                             try {
                                 if (fieldIndex_1_1 && !fieldIndex_1_1.done && (_b = fieldIndex_1.return)) _b.call(fieldIndex_1);
                             }
-                            finally { if (e_2) throw e_2.error; }
+                            finally { if (e_1) throw e_1.error; }
                         }
-                        _c.label = 3;
-                    case 3:
-                        _c.trys.push([3, 5, , 6]);
                         return [4 /*yield*/, batch.commit()];
-                    case 4:
+                    case 3:
                         _c.sent();
-                        return [3 /*break*/, 6];
-                    case 5:
-                        e_1 = _c.sent();
-                        console.error(e_1);
-                        return [3 /*break*/, 6];
-                    case 6: return [3 /*break*/, 8];
-                    case 7:
-                        console.error("Firestore is undefined.");
-                        _c.label = 8;
-                    case 8: return [2 /*return*/];
+                        return [3 /*break*/, 5];
+                    case 4: throw new Error("Firestore is undefined.");
+                    case 5: return [2 /*return*/];
                 }
             });
         });
     };
     FirestoreSearch.prototype.delete = function (docRef, options) {
         return __awaiter(this, void 0, void 0, function () {
-            var data, targetFields, batch_1, e_3;
+            var data, targetFields, batch_1;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         if (!!this.isAdmin) return [3 /*break*/, 1];
-                        console.error("You can only use FirestoreSearch.delete() with Admin SDK.");
-                        return [3 /*break*/, 6];
+                        throw new Error("You can only use FirestoreSearch.delete() with Admin SDK.");
                     case 1: return [4 /*yield*/, (0, firestore_2.getData)(docRef, options === null || options === void 0 ? void 0 : options.data)];
                     case 2:
                         data = _a.sent();
                         targetFields = (0, firestore_2.getTargetFields)(data, options === null || options === void 0 ? void 0 : options.fields);
-                        if (!this.db) return [3 /*break*/, 6];
+                        if (!this.db) return [3 /*break*/, 4];
                         batch_1 = new firestore_3.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
                         targetFields.forEach(function (field) {
                             if (_this.indexRef instanceof firestore_1.CollectionReference)
                                 batch_1.delete(_this.indexRef.doc((0, firestore_2.docID)(docRef.id, field)));
                         });
-                        _a.label = 3;
-                    case 3:
-                        _a.trys.push([3, 5, , 6]);
                         return [4 /*yield*/, batch_1.commit()];
-                    case 4:
+                    case 3:
                         _a.sent();
-                        return [3 /*break*/, 6];
-                    case 5:
-                        e_3 = _a.sent();
-                        console.error(e_3);
-                        return [3 /*break*/, 6];
-                    case 6: return [2 /*return*/];
+                        _a.label = 4;
+                    case 4: return [2 /*return*/];
                 }
             });
         });
