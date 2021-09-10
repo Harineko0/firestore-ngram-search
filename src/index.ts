@@ -28,7 +28,7 @@ const AdminIndexEntityConverter: FirestoreDataConverter<IndexEntity> = {
     fromFirestore(snapshot: FirebaseFirestore.QueryDocumentSnapshot): IndexEntity {
         return snapshot.data() as IndexEntity;
     },
-    toFirestore(modelObject: IndexEntity, options?: FirebaseFirestore.SetOptions): FirebaseFirestore.DocumentData {
+    toFirestore(modelObject: IndexEntity): FirebaseFirestore.DocumentData {
         return IndexEntityConverter.toFirestore(modelObject);
     }
 
@@ -38,7 +38,7 @@ const ClientIndexEntityConverter: firebase.firestore.FirestoreDataConverter<Inde
     fromFirestore(snapshot: firebase.firestore.QueryDocumentSnapshot, options: firebase.firestore.SnapshotOptions): IndexEntity {
         return snapshot.data(options) as IndexEntity;
     },
-    toFirestore(modelObject: IndexEntity, options?: firebase.firestore.SetOptions): firebase.firestore.DocumentData {
+    toFirestore(modelObject: IndexEntity): firebase.firestore.DocumentData {
         return IndexEntityConverter.toFirestore(modelObject);
     }
 
@@ -46,7 +46,6 @@ const ClientIndexEntityConverter: firebase.firestore.FirestoreDataConverter<Inde
 
 export type Options = {
     n?: number;
-    db?: Firestore;
 }
 
 export type SetOptions = {
@@ -83,12 +82,7 @@ export default class FirestoreSearch {
         if (ref instanceof CollectionReference) {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(AdminIndexEntityConverter);
             this.isAdmin = true;
-            const db = options?.db;
-            if (db) {
-                this.db = db;
-            } else {
-                console.error("Set Firestore database while using FirestoreSearch with Admin SDK.")
-            }
+            this.db = ref.firestore;
         } else {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(ClientIndexEntityConverter);
             this.isAdmin = false;
