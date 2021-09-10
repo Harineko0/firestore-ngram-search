@@ -89,25 +89,22 @@ export default class FirestoreSearch {
     private readonly indexRef: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>;
     private readonly isAdmin: boolean;
     private readonly n: number;
-    private logger;
 
     constructor(ref: CollectionReference | firebase.firestore.CollectionReference, options?: Options) {
         if (ref instanceof CollectionReference) {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(AdminIndexEntityConverter);
             this.isAdmin = true;
             this.db = ref.firestore;
-            this.logger = functions.logger;
         } else {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(ClientIndexEntityConverter);
             this.isAdmin = false;
-            this.logger = console;
         }
         this.n = options?.n ?? 3;
     }
 
     async set(docRef: DocumentReference, options?: SetOptions) {
         if (!this.isAdmin) {
-            this.logger.error("You can only use FirestoreSearch.set() with Admin SDK.")
+            console.error("You can only use FirestoreSearch.set() with Admin SDK.")
         } else {
             const data = await getData(docRef, options?.data);
             const targetFields = getTargetFields(data, options?.fields);
@@ -140,17 +137,17 @@ export default class FirestoreSearch {
                 try {
                     await batch.commit();
                 } catch (e) {
-                    this.logger.error(e);
+                    console.error(e);
                 }
             } else {
-                this.logger.error("Firestore is undefined.")
+                console.error("Firestore is undefined.")
             }
         }
     }
 
     async delete(docRef: DocumentReference, options?: DeleteOptions) {
         if (!this.isAdmin) {
-            this.logger.error("You can only use FirestoreSearch.delete() with Admin SDK.")
+            console.error("You can only use FirestoreSearch.delete() with Admin SDK.")
         } else {
             const data = await getData(docRef, options?.data)
             const targetFields = getTargetFields(data, options?.fields);
@@ -163,7 +160,7 @@ export default class FirestoreSearch {
                 try {
                     await batch.commit();
                 } catch (e) {
-                    this.logger.error(e);
+                    console.error(e);
                 }
             }
         }
