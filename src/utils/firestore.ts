@@ -157,8 +157,12 @@ export class SearchQuery {
 
         const snap = await query.get();
         if (snap.empty)
-            return {hits: []};
+            return {hits: [], data: []};
         const hits = snap.docs.map(doc => doc.data().__ref);
-        return {hits: Array.from(new Set(hits))};
+        const data = snap.docs.map(doc => {
+            const {__ref: {} = {}, __tokens: {} = {}, ...data} = doc.data()
+            return data;
+        })
+        return {hits: Array.from(new Set(hits)), data: Array.from(new Set(data))};
     }
 }

@@ -3,7 +3,6 @@ import {
     CollectionReference,
     DocumentReference,
     DocumentData,
-    Query,
     FirestoreDataConverter, WriteBatch,
 } from '@google-cloud/firestore';
 import {nGram} from "./nGram"
@@ -75,6 +74,7 @@ export type SearchOptions = {
 
 export type SearchResult = {
     hits: DocumentReference[];
+    data: DocumentData[];
 }
 
 export type DeleteOptions = {
@@ -153,26 +153,6 @@ export default class FirestoreSearch {
             const data = getData(docRef, options?.data)
             const targetFields = getTargetFields(data, options?.fields);
         }
-    }
-
-    async search(searchQuery: string, options?: SearchOptions): Promise<SearchResult> {
-        let query: Query<IndexEntity> | firebase.firestore.Query<IndexEntity> = this.indexRef;
-
-        let fields = options?.fields;
-        if (fields) {
-            query = query.where(`${fieldPaths.tokens}.${fieldPaths.field}`, "in", fields);
-        }
-
-        const _searchQuery = nGram(this.n, searchQuery);
-        _searchQuery.forEach(word => {
-            query = query.where(`${fieldPaths.tokens}.${word}`, "==", true);
-        })
-
-        const snap = await query.get();
-        if (snap.empty)
-            return {hits: []};
-        const hits = snap.docs.map(doc => doc.data().__ref);
-        return {hits: Array.from(new Set(hits))};
     }
 
     query() {
