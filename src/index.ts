@@ -6,11 +6,9 @@ import {
     FirestoreDataConverter, WriteBatch,
 } from '@google-cloud/firestore';
 import {nGram} from "./nGram"
-import * as functions from 'firebase-functions';
 import firebase from "firebase/compat";
 import {docID, getData, getTargetFields, SearchQuery} from "./utils/firestore";
 import {WriteBatch2} from "firestore-full-text-search/lib/utils/firestore";
-import * as console from "console";
 
 export interface IndexEntity {
     __ref: DocumentReference;
@@ -104,7 +102,7 @@ export default class FirestoreSearch {
 
     async set(docRef: DocumentReference, options?: SetOptions) {
         if (!this.isAdmin) {
-            console.error("You can only use FirestoreSearch.set() with Admin SDK.")
+            throw new Error("You can only use FirestoreSearch.set() with Admin SDK.")
         } else {
             const data = await getData(docRef, options?.data);
             const targetFields = getTargetFields(data, options?.fields);
@@ -134,20 +132,16 @@ export default class FirestoreSearch {
                     if (this.indexRef instanceof CollectionReference)
                         batch.set(this.indexRef.doc(docID(docRef.id, field)), entity)
                 }
-                try {
-                    await batch.commit();
-                } catch (e) {
-                    console.error(e);
-                }
+                await batch.commit();
             } else {
-                console.error("Firestore is undefined.")
+                throw new Error("Firestore is undefined.")
             }
         }
     }
 
     async delete(docRef: DocumentReference, options?: DeleteOptions) {
         if (!this.isAdmin) {
-            console.error("You can only use FirestoreSearch.delete() with Admin SDK.")
+            throw new Error("You can only use FirestoreSearch.delete() with Admin SDK.")
         } else {
             const data = await getData(docRef, options?.data)
             const targetFields = getTargetFields(data, options?.fields);
@@ -157,11 +151,7 @@ export default class FirestoreSearch {
                     if (this.indexRef instanceof CollectionReference)
                         batch.delete(this.indexRef.doc(docID(docRef.id, field)))
                 })
-                try {
-                    await batch.commit();
-                } catch (e) {
-                    console.error(e);
-                }
+                await batch.commit();
             }
         }
     }
