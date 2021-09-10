@@ -6,7 +6,7 @@ import {
     FirestoreDataConverter, WriteBatch,
 } from '@google-cloud/firestore';
 import {nGram} from "./nGram"
-import firebase from "firebase/compat";
+import firebase from "firebase";
 import {docID, getData, getTargetFields, SearchQuery} from "./utils/firestore";
 import {WriteBatch2} from "firestore-full-text-search/lib/utils/firestore";
 

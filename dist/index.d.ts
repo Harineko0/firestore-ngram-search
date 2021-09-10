@@ -1,5 +1,5 @@
 import { CollectionReference, DocumentReference, DocumentData, WriteBatch } from '@google-cloud/firestore';
-import firebase from "firebase/compat";
+import firebase from "firebase";
 import { SearchQuery } from "./utils/firestore";
 export interface IndexEntity {
     __ref: DocumentReference;

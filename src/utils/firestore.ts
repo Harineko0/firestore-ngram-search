@@ -5,7 +5,7 @@ import {
     Query,
 } from "@google-cloud/firestore";
 import {IndexEntity, fieldPaths, SearchOptions, SearchResult} from "../index";
-import firebase from "firebase/compat";
+import firebase from "firebase";
 import {nGram} from "../nGram";
 
 export async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
