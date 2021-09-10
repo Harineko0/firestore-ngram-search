@@ -89,8 +89,7 @@ export class WriteBatch2 {
             : this.db.batch();
         const batchs: WriteBatch[] = [currentBatch];
         let i = 0;
-        // @ts-ignore
-        for (const [ref, data] of this.writeDocumentMap) {
+        this.writeDocumentMap.forEach((data, ref) => {
             switch (data.type) {
                 case 'create':
                     currentBatch.create(ref, data.data);
@@ -113,7 +112,7 @@ export class WriteBatch2 {
             }
 
             i++;
-        }
+        });
 
         if (isSmallDocs && this.externalBatch && batchs.length === 1) {
             return [];

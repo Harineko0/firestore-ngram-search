@@ -78,7 +78,7 @@ exports.fieldPaths = void 0;
 var firestore_1 = require("@google-cloud/firestore");
 var nGram_1 = require("./nGram");
 var firestore_2 = require("./utils/firestore");
-var firestore_3 = require("firestore-full-text-search/lib/utils/firestore");
+var batch_1 = require("./utils/batch");
 exports.fieldPaths = {
     tokens: "__tokens",
     field: "__field",
@@ -155,7 +155,7 @@ var FirestoreSearch = /** @class */ (function () {
                             fieldIndex_2.set(field, entity);
                         });
                         if (!this.db) return [3 /*break*/, 4];
-                        batch = new firestore_3.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
+                        batch = new batch_1.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
                         try {
                             for (fieldIndex_1 = __values(fieldIndex_2), fieldIndex_1_1 = fieldIndex_1.next(); !fieldIndex_1_1.done; fieldIndex_1_1 = fieldIndex_1.next()) {
                                 _a = __read(fieldIndex_1_1.value, 2), field = _a[0], entity = _a[1];
@@ -182,7 +182,7 @@ var FirestoreSearch = /** @class */ (function () {
     };
     FirestoreSearch.prototype.delete = function (docRef, options) {
         return __awaiter(this, void 0, void 0, function () {
-            var data, targetFields, batch_1;
+            var data, targetFields, batch_2;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -194,12 +194,12 @@ var FirestoreSearch = /** @class */ (function () {
                         data = _a.sent();
                         targetFields = (0, firestore_2.getTargetFields)(data, options === null || options === void 0 ? void 0 : options.fields);
                         if (!this.db) return [3 /*break*/, 4];
-                        batch_1 = new firestore_3.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
+                        batch_2 = new batch_1.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
                         targetFields.forEach(function (field) {
                             if (_this.indexRef instanceof firestore_1.CollectionReference)
-                                batch_1.delete(_this.indexRef.doc((0, firestore_2.docID)(docRef.id, field)));
+                                batch_2.delete(_this.indexRef.doc((0, firestore_2.docID)(docRef.id, field)));
                         });
-                        return [4 /*yield*/, batch_1.commit()];
+                        return [4 /*yield*/, batch_2.commit()];
                     case 3:
                         _a.sent();
                         _a.label = 4;
