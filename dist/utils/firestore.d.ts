@@ -1,6 +1,6 @@
 import { CollectionReference, DocumentData, DocumentReference } from "@google-cloud/firestore";
 import { IndexEntity, SearchOptions, SearchResult } from "../index";
-import firebase from "firebase/compat";
+import firebase from "firebase";
 export declare function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData>;
 export declare function getTargetFields(data: DocumentData, fieldsOrUndef?: string[]): Set<string>;
 export declare function docID(refID: string, field: string): string;
