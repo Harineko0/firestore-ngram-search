@@ -9,6 +9,7 @@ import {
 import {nGram} from "./nGram"
 import * as functions from 'firebase-functions';
 import firebase from "firebase/compat";
+import {getData, getTargetFields} from "./utils/firestore";
 
 interface IndexEntity {
     ref: DocumentReference;
@@ -94,8 +95,8 @@ export default class FirestoreSearch {
         if (!this.isAdmin) {
             console.error("You can only use FirestoreSearch.set() with Admin SDK.")
         } else {
-            const data = await FirestoreSearch.getData(docRef, options?.data);
-            const targetFields = FirestoreSearch.getTargetFields(data, options?.fields);
+            const data = await getData(docRef, options?.data);
+            const targetFields = getTargetFields(data, options?.fields);
 
             const keyIndex: Map<string, IndexEntity> = new Map<string, IndexEntity>();
             Array.from(targetFields.values())
@@ -136,8 +137,8 @@ export default class FirestoreSearch {
         if (!this.isAdmin) {
             console.error("You can only use FirestoreSearch.delete() with Admin SDK.")
         } else {
-            const data = FirestoreSearch.getData(docRef, options?.data)
-            const targetFields = FirestoreSearch.getTargetFields(data, options?.fields);
+            const data = getData(docRef, options?.data)
+            const targetFields = getTargetFields(data, options?.fields);
         }
     }
 
@@ -159,36 +160,5 @@ export default class FirestoreSearch {
             return {hits: []};
         const hits = snap.docs.map(doc => doc.data().ref);
         return {hits: Array.from(new Set(hits))};
-    }
-
-    private static async getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
-        let data = dataOrUndef;
-        if (!data) {
-            const snap = await ref.get();
-            if (!snap.exists) {
-                throw new Error('Document does not exist.');
-            }
-            data = snap.data() as DocumentData;
-        }
-        const _data = data;
-        if (!_data) {
-            throw new Error('Document does not exist.');
-        }
-        return _data;
-    }
-
-    private static getTargetFields(data: DocumentData, fieldsOrUndef?: string[]): Set<string> {
-        let fields = fieldsOrUndef;
-        let targetFields = new Set<string>();
-        if (fields) {
-            targetFields = new Set(fields.filter(field => field in data && typeof data[field] === "string"))
-        } else {
-            for (const [fieldName, value] of Object.entries(data)) {
-                if (typeof value !== "string")
-                    continue;
-                targetFields.add(fieldName);
-            }
-        }
-        return targetFields;
     }
 }
