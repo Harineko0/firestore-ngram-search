@@ -35,7 +35,6 @@ export default class FirestoreSearch {
     private readonly indexRef;
     private readonly isAdmin;
     private readonly n;
-    private logger;
     constructor(ref: CollectionReference | firebase.firestore.CollectionReference, options?: Options);
     set(docRef: DocumentReference, options?: SetOptions): Promise<void>;
     delete(docRef: DocumentReference, options?: DeleteOptions): Promise<void>;

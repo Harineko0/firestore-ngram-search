@@ -96,7 +96,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.fieldPaths = void 0;
 var firestore_1 = require("@google-cloud/firestore");
 var nGram_1 = require("./nGram");
-var functions = __importStar(require("firebase-functions"));
 var firestore_2 = require("./utils/firestore");
 var firestore_3 = require("firestore-full-text-search/lib/utils/firestore");
 var console = __importStar(require("console"));
@@ -141,12 +140,10 @@ var FirestoreSearch = /** @class */ (function () {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(AdminIndexEntityConverter);
             this.isAdmin = true;
             this.db = ref.firestore;
-            this.logger = functions.logger;
         }
         else {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(ClientIndexEntityConverter);
             this.isAdmin = false;
-            this.logger = console;
         }
         this.n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 3;
     }
@@ -159,7 +156,7 @@ var FirestoreSearch = /** @class */ (function () {
                 switch (_c.label) {
                     case 0:
                         if (!!this.isAdmin) return [3 /*break*/, 1];
-                        this.logger.error("You can only use FirestoreSearch.set() with Admin SDK.");
+                        console.error("You can only use FirestoreSearch.set() with Admin SDK.");
                         return [3 /*break*/, 8];
                     case 1: return [4 /*yield*/, (0, firestore_2.getData)(docRef, options === null || options === void 0 ? void 0 : options.data)];
                     case 2:
@@ -203,11 +200,11 @@ var FirestoreSearch = /** @class */ (function () {
                         return [3 /*break*/, 6];
                     case 5:
                         e_1 = _c.sent();
-                        this.logger.error(e_1);
+                        console.error(e_1);
                         return [3 /*break*/, 6];
                     case 6: return [3 /*break*/, 8];
                     case 7:
-                        this.logger.error("Firestore is undefined.");
+                        console.error("Firestore is undefined.");
                         _c.label = 8;
                     case 8: return [2 /*return*/];
                 }
@@ -222,7 +219,7 @@ var FirestoreSearch = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         if (!!this.isAdmin) return [3 /*break*/, 1];
-                        this.logger.error("You can only use FirestoreSearch.delete() with Admin SDK.");
+                        console.error("You can only use FirestoreSearch.delete() with Admin SDK.");
                         return [3 /*break*/, 6];
                     case 1: return [4 /*yield*/, (0, firestore_2.getData)(docRef, options === null || options === void 0 ? void 0 : options.data)];
                     case 2:
@@ -243,7 +240,7 @@ var FirestoreSearch = /** @class */ (function () {
                         return [3 /*break*/, 6];
                     case 5:
                         e_3 = _a.sent();
-                        this.logger.error(e_3);
+                        console.error(e_3);
                         return [3 /*break*/, 6];
                     case 6: return [2 /*return*/];
                 }
