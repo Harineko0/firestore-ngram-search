@@ -65,8 +65,8 @@ interface OrderByFilter {
 }
 
 export class SearchQuery {
-    private ref: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>;
-    private n: number;
+    private readonly ref: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>;
+    private readonly n: number;
     private _where: WhereFilter[] = [];
     private _orderBy?: OrderByFilter;
     private _limit: number;
