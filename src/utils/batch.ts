@@ -7,9 +7,6 @@ import type {
     SetOptions,
     Precondition,
     WriteResult,
-    Query,
-    CollectionReference,
-    FieldPath,
 } from '@google-cloud/firestore';
 
 export type WriteBatch2Options = {
@@ -31,7 +28,6 @@ type WriteDeleteData = {
     precondition?: Precondition;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function flatDeep(arr: Array<any>, d = 1): Array<any> {
     return d > 0
         ? arr.reduce(
@@ -44,8 +40,8 @@ function flatDeep(arr: Array<any>, d = 1): Array<any> {
 
 // Split more than 500 document writes.
 export class WriteBatch2 {
+    private readonly externalBatch: WriteBatch | null;
     private db: Firestore;
-    private externalBatch: WriteBatch | null;
     private writeDocumentMap = new Map<DocumentReference, WriteData<unknown>>();
     private committed = false;
 
@@ -125,18 +121,4 @@ export class WriteBatch2 {
         const results = await Promise.all(batchs.map(batch => batch.commit()));
         return flatDeep(results);
     }
-}
-
-export function startsWith(
-    query: Query | CollectionReference,
-    fieldPath: string | FieldPath,
-    value: string
-) {
-    const start = value.slice(0, value.length - 1);
-    const end = value.slice(value.length - 1, value.length);
-    const v = `${start}${String.fromCharCode(end.charCodeAt(0) + 1)}`;
-    return query
-        .where(fieldPath, '>=', value)
-        .where(fieldPath, '<', v)
-        .orderBy(fieldPath);
 }

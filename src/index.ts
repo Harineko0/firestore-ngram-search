@@ -5,8 +5,8 @@ import {
     DocumentData,
     FirestoreDataConverter, WriteBatch,
 } from '@google-cloud/firestore';
-import {nGram} from "./nGram"
 import firebase from "firebase";
+import {nGram} from "./nGram"
 import {docID, getData, getTargetFields, SearchQuery} from "./utils/firestore";
 import {WriteBatch2} from "./utils/batch";
 
