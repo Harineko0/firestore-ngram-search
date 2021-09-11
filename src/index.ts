@@ -116,7 +116,7 @@ function getIndexDocument(docRef: DocumentReference, field: string, data: Docume
     return {field: field, entity: entity, n: n};
 }
 
-export default class FirestoreSearch {
+export default class FirestoreNGramSearch {
     private readonly db?: Firestore;
     private readonly indexRef: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>;
     private readonly isAdmin: boolean;

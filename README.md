@@ -1,9 +1,9 @@
-# Firestore-Search
-Firestore-Search provides one-query full-text search using nGram.
+# Firestore-nGram-Search
+Firestore-nGram-Search provides one-query full-text search using nGram.
 
 ## Usage
 ```
-npm install firestore-search
+npm install firestore-ngram-search
 ```
 
 ```TypeScript
