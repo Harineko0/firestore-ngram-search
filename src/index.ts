@@ -7,8 +7,8 @@ import {
 } from '@google-cloud/firestore';
 import firebase from "firebase";
 import {nGram} from "./nGram"
-import {docID, getData, getTargetFields, SearchQuery} from "./utils/firestore";
-import {WriteBatch2} from "./utils/batch";
+import {docID, getData, getTargetFields, SearchQuery} from "./firestore";
+import {WriteBatch2} from "./batch";
 
 export interface IndexEntity {
     __ref: DocumentReference;
@@ -163,6 +163,6 @@ export default class FirestoreSearch {
     }
 
     query() {
-        return new SearchQuery(this.indexRef);
+        return new SearchQuery(this.indexRef, this.n);
     }
 }

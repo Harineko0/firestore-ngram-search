@@ -1,12 +1,7 @@
-import {
-    CollectionReference,
-    DocumentData,
-    DocumentReference,
-    Query,
-} from "@google-cloud/firestore";
-import {IndexEntity, fieldPaths, SearchOptions, SearchResult} from "../index";
+import {CollectionReference, DocumentData, DocumentReference, Query,} from "@google-cloud/firestore";
+import {fieldPaths, IndexEntity, SearchOptions, SearchResult} from "./index";
 import firebase from "firebase";
-import {nGram} from "../nGram";
+import {parseQuery} from "./parse";
 
 export async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
     let data = dataOrUndef;
@@ -64,7 +59,7 @@ export class SearchQuery {
 
     constructor(ref: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>, n?: number) {
         this.ref = ref;
-        this.n = n ?? 3;
+        this.n = n ?? 2;
         this.query = ref;
     }
 
@@ -109,8 +104,8 @@ export class SearchQuery {
             this.query = this.query.where(`${fieldPaths.tokens}.${fieldPaths.field}`, "in", fields);
 
         if (searchQuery) {
-            const _searchQuery = nGram(this.n, searchQuery);
-            _searchQuery.forEach(word => {
+            const _searchQuery = parseQuery(searchQuery, {n: this.n});
+            _searchQuery.words.forEach(word => {
                 this.query = this.query.where(`${fieldPaths.tokens}.${word}`, "==", true);
             })
         }
