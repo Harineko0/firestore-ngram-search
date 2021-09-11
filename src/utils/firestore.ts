@@ -8,7 +8,7 @@ import {IndexEntity, fieldPaths, SearchOptions, SearchResult} from "../index";
 import firebase from "firebase";
 import {nGram} from "../nGram";
 
-async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
+export async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
     let data = dataOrUndef;
     if (!data) {
         const snap = await ref.get();
@@ -24,7 +24,7 @@ async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Prom
     return _data;
 }
 
-function getTargetFields(data: DocumentData, fieldsOrUndef?: string[]): Set<string> {
+export function getTargetFields(data: DocumentData, fieldsOrUndef?: string[]): Set<string> {
     let fields = fieldsOrUndef;
     let targetFields = new Set<string>();
     if (fields) {
@@ -39,7 +39,7 @@ function getTargetFields(data: DocumentData, fieldsOrUndef?: string[]): Set<stri
     return targetFields;
 }
 
-function docID(refID: string, field: string) {
+export function docID(refID: string, field: string) {
     return refID + "." + field
 }
 
@@ -74,7 +74,6 @@ export class SearchQuery {
     }
 
     orderBy(fieldPath: string, directionStr?: OrderByDirection): SearchQuery {
-        const _order: OrderByDirection = directionStr ?? "asc";
         this.query = this.query.orderBy(fieldPath, directionStr);
         return this;
     }
