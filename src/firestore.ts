@@ -164,7 +164,8 @@ export function parseQuery(stringQuery: string, options?: ParseOptions): SearchV
             if (query.length < _n) {
                 const chars: string[] = [];
                 for (let i = 0; i < _n; i++) {
-                    chars.push(query[i]);
+                    if (query[i])
+                        chars.push(query[i]);
                 }
                 return chars;
             }
