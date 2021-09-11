@@ -85,6 +85,30 @@ export type SearchResult = {
     data: DocumentData[];
 }
 
+type IndexDocument = {
+    n: number,
+    field: string,
+    entity: IndexEntity,
+}
+
+function getIndexDocument(docRef: DocumentReference, field: string, data: DocumentData, n: number): IndexDocument {
+    const tokens = new Map<string, string | boolean>();
+    const nGrams = nGram(n, data[field]);
+    nGrams.forEach(nGram => {
+        if (!nGram.startsWith("__"))
+            tokens.set(nGram, true);
+    })
+    tokens.set(fieldPaths.field, field);
+
+    const entity: IndexEntity = {
+        __ref: docRef,
+        __tokens: tokens,
+        values: {
+            ...data,
+        }
+    };
+    return {field: field, entity: entity, n: n};
+}
 
 export default class FirestoreSearch {
     private readonly db?: Firestore;
@@ -109,35 +133,22 @@ export default class FirestoreSearch {
             throw new Error("You can only use FirestoreSearch.set() with Admin SDK.")
         } else {
             const data = await getData(docRef, options?.data);
-            const targetFields = getTargetFields(data, options?.fields);
+            const targetFields = Array.from(getTargetFields(data, options?.fields).values());
 
-            const fieldIndex: Map<string, IndexEntity> = new Map<string, IndexEntity>();
-            Array.from(targetFields.values())
-                .forEach(field => {
-                    const tokens = new Map<string, string | boolean>();
-                    const nGrams = nGram(this.n, data[field]);
-                    nGrams.forEach(nGram => {
-                        if (!nGram.startsWith("__"))
-                            tokens.set(nGram, true);
-                    })
-                    tokens.set(fieldPaths.field, field);
-
-                    const entity: IndexEntity = {
-                        __ref: docRef,
-                        __tokens: tokens,
-                        values: {
-                            ...data,
-                        }
-                    };
-                    fieldIndex.set(field, entity);
-                });
+            const nGramDocs: IndexDocument[] = targetFields.map(field => {
+                return getIndexDocument(docRef, field, data, this.n);
+            });
+            const charDocs: IndexDocument[] = targetFields.map(field => {
+                return getIndexDocument(docRef, field, data, 1);
+            })
+            const docs: IndexDocument[] = [...nGramDocs, ...charDocs];
 
             if (this.db) {
                 const batch = new WriteBatch2(this.db, {batch: options?.batch});
-                for (const [field, entity] of fieldIndex) {
+                docs.forEach(doc => {
                     if (this.indexRef instanceof CollectionReference)
-                        batch.set(this.indexRef.doc(docID(docRef.id, field)), entity)
-                }
+                        batch.set(this.indexRef.doc(docID(docRef.id, doc.field, doc.n)), doc.entity)
+                })
                 await batch.commit();
             } else {
                 throw new Error("Firestore is undefined.")
@@ -154,8 +165,10 @@ export default class FirestoreSearch {
             if (this.db) {
                 const batch = new WriteBatch2(this.db, {batch: options?.batch});
                 targetFields.forEach(field => {
-                    if (this.indexRef instanceof CollectionReference)
-                        batch.delete(this.indexRef.doc(docID(docRef.id, field)))
+                    if (this.indexRef instanceof CollectionReference) {
+                        batch.delete(this.indexRef.doc(docID(docRef.id, field, this.n)));
+                        batch.delete(this.indexRef.doc(docID(docRef.id, field, 1)));
+                    }
                 })
                 await batch.commit();
             }

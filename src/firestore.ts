@@ -34,8 +34,8 @@ export function getTargetFields(data: DocumentData, fieldsOrUndef?: string[]): S
     return targetFields;
 }
 
-export function docID(refID: string, field: string) {
-    return refID + "." + field
+export function docID(refID: string, field: string, n: number) {
+    return refID + "." + field + "." + n;
 }
 
 type OrderByDirection = 'desc' | 'asc';
@@ -147,9 +147,18 @@ export type ParseOptions = {
 }
 export function parseQuery(stringQuery: string, options?: ParseOptions): SearchValue {
     const _n = options?.n ?? 2;
-    const splitQuery: string[] = stringQuery.split(" ");
-    const searchQuery: string[] = splitQuery
-        .map(query => nGram(_n, query))
+    const eachQuery: string[] = stringQuery.split(" ");
+    const searchQuery: string[] = eachQuery
+        .map(query => {
+            if (query.length < _n) {
+                const chars: string[] = [];
+                for (let i = 0; i < _n; i++) {
+                    chars.push(query[i]);
+                }
+                return chars;
+            }
+            return nGram(_n, query)
+        })
         .reduce((pre, current) => {
             pre.push(...current);
             return pre;
