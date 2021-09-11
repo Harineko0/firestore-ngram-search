@@ -80,8 +80,14 @@ export type SearchOptions = {
     limit?: number;
 }
 
+export type HitData = {
+    ref: DocumentReference;
+    count: number;
+}
+
+
 export type SearchResult = {
-    hits: DocumentReference[];
+    hits: HitData[];
     data: DocumentData[];
 }
 

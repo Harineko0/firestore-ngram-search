@@ -1,5 +1,5 @@
 import {CollectionReference, DocumentData, DocumentReference, FieldPath, Query,} from "@google-cloud/firestore";
-import {fieldPaths, IndexEntity, SearchOptions, SearchResult} from "./index";
+import {fieldPaths, HitData, IndexEntity, SearchOptions, SearchResult} from "./index";
 import firebase from "firebase";
 import {nGram} from "./nGram";
 
@@ -117,11 +117,22 @@ export class SearchQuery {
         if (snap.empty)
             return {hits: [], data: []};
         const hits = snap.docs.map(doc => doc.data().__ref);
+        const refToCount: Map<DocumentReference, number> = new Map<DocumentReference, number>();
+        for (const hit of hits) {
+            if (refToCount.has(hit)) {
+                const _count = refToCount.get(hit) ?? 0;
+                const count = _count + 1;
+                refToCount.set(hit, count);
+            } else {
+                refToCount.set(hit, 1);
+            }
+        }
+        const hitData: HitData[] = Array.from(refToCount.entries()).map(([ref, count]) => ({ref: ref, count: count}));
         const data = snap.docs.map(doc => {
             const {__ref: {} = {}, __tokens: {} = {}, ...data} = doc.data()
             return data;
         })
-        return {hits: Array.from(new Set(hits)), data: Array.from(new Set(data))};
+        return {hits: hitData, data: Array.from(new Set(data))};
     }
 }
 
