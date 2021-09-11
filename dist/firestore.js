@@ -276,7 +276,8 @@ function parseQuery(stringQuery, options) {
         if (query.length < _n) {
             var chars = [];
             for (var i = 0; i < _n; i++) {
-                chars.push(query[i]);
+                if (query[i])
+                    chars.push(query[i]);
             }
             return chars;
         }
