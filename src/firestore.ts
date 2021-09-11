@@ -158,7 +158,8 @@ export type ParseOptions = {
 }
 export function parseQuery(stringQuery: string, options?: ParseOptions): SearchValue {
     const _n = options?.n ?? 2;
-    const eachQuery: string[] = stringQuery.split(" ");
+    let eachQuery: string[] = stringQuery.split(" ");
+    eachQuery = eachQuery.filter(value => value !== '');
     const searchQuery: string[] = eachQuery
         .map(query => {
             if (query.length < _n) {

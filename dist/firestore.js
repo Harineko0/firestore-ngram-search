@@ -271,6 +271,7 @@ function parseQuery(stringQuery, options) {
     var _a;
     var _n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 2;
     var eachQuery = stringQuery.split(" ");
+    eachQuery = eachQuery.filter(function (value) { return value !== ''; });
     var searchQuery = eachQuery
         .map(function (query) {
         if (query.length < _n) {
