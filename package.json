@@ -1,7 +1,7 @@
 {
   "name": "firestore-search",
   "version": "1.1.4",
-  "description": "Search firestore documents quickly.",
+  "description": "Search firestore documents.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

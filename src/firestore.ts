@@ -1,7 +1,7 @@
-import {CollectionReference, DocumentData, DocumentReference, Query,} from "@google-cloud/firestore";
+import {CollectionReference, DocumentData, DocumentReference, FieldPath, Query,} from "@google-cloud/firestore";
 import {fieldPaths, IndexEntity, SearchOptions, SearchResult} from "./index";
 import firebase from "firebase";
-import {parseQuery} from "./parse";
+import {nGram} from "./nGram";
 
 export async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
     let data = dataOrUndef;
@@ -123,4 +123,36 @@ export class SearchQuery {
         })
         return {hits: Array.from(new Set(hits)), data: Array.from(new Set(data))};
     }
+}
+
+export function startsWith(
+    query: Query | CollectionReference,
+    fieldPath: string | FieldPath,
+    value: string
+) {
+    const start = value.slice(0, value.length - 1);
+    const end = value.slice(value.length - 1, value.length);
+    const v = start + String.fromCharCode(end.charCodeAt(0) + 1);
+    return query
+        .where(fieldPath, '>=', value)
+        .where(fieldPath, '<', v)
+        .orderBy(fieldPath);
+}
+
+export type SearchValue = {
+    words: string[];
+}
+export type ParseOptions = {
+    n?: number;
+}
+export function parseQuery(stringQuery: string, options?: ParseOptions): SearchValue {
+    const _n = options?.n ?? 2;
+    const splitQuery: string[] = stringQuery.split(" ");
+    const searchQuery: string[] = splitQuery
+        .map(query => nGram(_n, query))
+        .reduce((pre, current) => {
+            pre.push(...current);
+            return pre;
+        }, []);
+    return {words: searchQuery};
 }
