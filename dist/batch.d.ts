@@ -1,10 +1,10 @@
-import type { Firestore, WriteBatch, DocumentReference, SetOptions, Precondition, WriteResult, Query, CollectionReference, FieldPath } from '@google-cloud/firestore';
+import type { Firestore, WriteBatch, DocumentReference, SetOptions, Precondition, WriteResult } from '@google-cloud/firestore';
 export declare type WriteBatch2Options = {
     batch?: WriteBatch;
 };
 export declare class WriteBatch2 {
+    private readonly externalBatch;
     private db;
-    private externalBatch;
     private writeDocumentMap;
     private committed;
     constructor(db: Firestore, options?: WriteBatch2Options);
@@ -13,4 +13,3 @@ export declare class WriteBatch2 {
     delete(documentRef: DocumentReference<any>, precondition?: Precondition): WriteBatch2;
     commit(): Promise<WriteResult[]>;
 }
-export declare function startsWith(query: Query | CollectionReference, fieldPath: string | FieldPath, value: string): Query<FirebaseFirestore.DocumentData>;

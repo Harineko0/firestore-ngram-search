@@ -46,16 +46,16 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __values = (this && this.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
         }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+    return t;
 };
 var __read = (this && this.__read) || function (o, n) {
     var m = typeof Symbol === "function" && o[Symbol.iterator];
@@ -73,27 +73,35 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fieldPaths = void 0;
 var firestore_1 = require("@google-cloud/firestore");
 var nGram_1 = require("./nGram");
-var firestore_2 = require("./utils/firestore");
-var batch_1 = require("./utils/batch");
+var firestore_2 = require("./firestore");
+var batch_1 = require("./batch");
 exports.fieldPaths = {
     tokens: "__tokens",
     field: "__field",
 };
 var IndexEntityConverter = {
     toFirestore: function (object) {
-        return {
-            __ref: object.__ref,
-            __tokens: Object.fromEntries(object.__tokens),
-        };
+        return __assign(__assign({}, object.values), { __ref: object.__ref, __tokens: Object.fromEntries(object.__tokens) });
     },
     fromFirestore: function (data) {
+        var _a = data.__ref, _b = _a === void 0 ? {} : _a, _c = _b, _d = data.__tokens, _e = _d === void 0 ? {} : _d, _f = _e, values = __rest(data, ["__ref", "__tokens"]);
         return {
             __ref: data.__ref,
             __tokens: data.__tokens,
+            values: values,
         };
     }
 };
@@ -113,6 +121,21 @@ var ClientIndexEntityConverter = {
         return IndexEntityConverter.toFirestore(modelObject);
     }
 };
+function getIndexDocument(docRef, field, data, n) {
+    var tokens = new Map();
+    var nGrams = (0, nGram_1.nGram)(n, data[field]);
+    nGrams.forEach(function (nGram) {
+        if (!nGram.startsWith("__"))
+            tokens.set(nGram, true);
+    });
+    tokens.set(exports.fieldPaths.field, field);
+    var entity = {
+        __ref: docRef,
+        __tokens: tokens,
+        values: __assign({}, data)
+    };
+    return { field: field, entity: entity, n: n };
+}
 var FirestoreSearch = /** @class */ (function () {
     function FirestoreSearch(ref, options) {
         var _a;
@@ -125,54 +148,37 @@ var FirestoreSearch = /** @class */ (function () {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(ClientIndexEntityConverter);
             this.isAdmin = false;
         }
-        this.n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 3;
+        this.n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 2;
     }
     FirestoreSearch.prototype.set = function (docRef, options) {
         return __awaiter(this, void 0, void 0, function () {
-            var data_1, targetFields, fieldIndex_2, batch, fieldIndex_1, fieldIndex_1_1, _a, field, entity;
-            var e_1, _b;
+            var data_1, targetFields, nGramDocs, charDocs, docs, batch_2;
             var _this = this;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         if (!!this.isAdmin) return [3 /*break*/, 1];
                         throw new Error("You can only use FirestoreSearch.set() with Admin SDK.");
                     case 1: return [4 /*yield*/, (0, firestore_2.getData)(docRef, options === null || options === void 0 ? void 0 : options.data)];
                     case 2:
-                        data_1 = _c.sent();
-                        targetFields = (0, firestore_2.getTargetFields)(data_1, options === null || options === void 0 ? void 0 : options.fields);
-                        fieldIndex_2 = new Map();
-                        Array.from(targetFields.values())
-                            .forEach(function (field) {
-                            var tokens = new Map();
-                            var nGrams = (0, nGram_1.nGram)(_this.n, data_1[field]);
-                            nGrams.forEach(function (nGram) {
-                                if (!nGram.startsWith("__"))
-                                    tokens.set(nGram, true);
-                            });
-                            tokens.set(exports.fieldPaths.field, field);
-                            var entity = __assign({ __ref: docRef, __tokens: tokens }, data_1);
-                            fieldIndex_2.set(field, entity);
+                        data_1 = _a.sent();
+                        targetFields = Array.from((0, firestore_2.getTargetFields)(data_1, options === null || options === void 0 ? void 0 : options.fields).values());
+                        nGramDocs = targetFields.map(function (field) {
+                            return getIndexDocument(docRef, field, data_1, _this.n);
                         });
+                        charDocs = targetFields.map(function (field) {
+                            return getIndexDocument(docRef, field, data_1, 1);
+                        });
+                        docs = __spreadArray(__spreadArray([], __read(nGramDocs), false), __read(charDocs), false);
                         if (!this.db) return [3 /*break*/, 4];
-                        batch = new batch_1.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
-                        try {
-                            for (fieldIndex_1 = __values(fieldIndex_2), fieldIndex_1_1 = fieldIndex_1.next(); !fieldIndex_1_1.done; fieldIndex_1_1 = fieldIndex_1.next()) {
-                                _a = __read(fieldIndex_1_1.value, 2), field = _a[0], entity = _a[1];
-                                if (this.indexRef instanceof firestore_1.CollectionReference)
-                                    batch.set(this.indexRef.doc((0, firestore_2.docID)(docRef.id, field)), entity);
-                            }
-                        }
-                        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                        finally {
-                            try {
-                                if (fieldIndex_1_1 && !fieldIndex_1_1.done && (_b = fieldIndex_1.return)) _b.call(fieldIndex_1);
-                            }
-                            finally { if (e_1) throw e_1.error; }
-                        }
-                        return [4 /*yield*/, batch.commit()];
+                        batch_2 = new batch_1.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
+                        docs.forEach(function (doc) {
+                            if (_this.indexRef instanceof firestore_1.CollectionReference)
+                                batch_2.set(_this.indexRef.doc((0, firestore_2.docID)(docRef.id, doc.field, doc.n)), doc.entity);
+                        });
+                        return [4 /*yield*/, batch_2.commit()];
                     case 3:
-                        _c.sent();
+                        _a.sent();
                         return [3 /*break*/, 5];
                     case 4: throw new Error("Firestore is undefined.");
                     case 5: return [2 /*return*/];
@@ -182,7 +188,7 @@ var FirestoreSearch = /** @class */ (function () {
     };
     FirestoreSearch.prototype.delete = function (docRef, options) {
         return __awaiter(this, void 0, void 0, function () {
-            var data, targetFields, batch_2;
+            var data, targetFields, batch_3;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -194,12 +200,14 @@ var FirestoreSearch = /** @class */ (function () {
                         data = _a.sent();
                         targetFields = (0, firestore_2.getTargetFields)(data, options === null || options === void 0 ? void 0 : options.fields);
                         if (!this.db) return [3 /*break*/, 4];
-                        batch_2 = new batch_1.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
+                        batch_3 = new batch_1.WriteBatch2(this.db, { batch: options === null || options === void 0 ? void 0 : options.batch });
                         targetFields.forEach(function (field) {
-                            if (_this.indexRef instanceof firestore_1.CollectionReference)
-                                batch_2.delete(_this.indexRef.doc((0, firestore_2.docID)(docRef.id, field)));
+                            if (_this.indexRef instanceof firestore_1.CollectionReference) {
+                                batch_3.delete(_this.indexRef.doc((0, firestore_2.docID)(docRef.id, field, _this.n)));
+                                batch_3.delete(_this.indexRef.doc((0, firestore_2.docID)(docRef.id, field, 1)));
+                            }
                         });
-                        return [4 /*yield*/, batch_2.commit()];
+                        return [4 /*yield*/, batch_3.commit()];
                     case 3:
                         _a.sent();
                         _a.label = 4;
@@ -209,7 +217,7 @@ var FirestoreSearch = /** @class */ (function () {
         });
     };
     FirestoreSearch.prototype.query = function () {
-        return new firestore_2.SearchQuery(this.indexRef);
+        return new firestore_2.SearchQuery(this.indexRef, this.n);
     };
     return FirestoreSearch;
 }());

@@ -73,10 +73,19 @@ var __read = (this && this.__read) || function (o, n) {
     }
     return ar;
 };
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SearchQuery = exports.docID = exports.getTargetFields = exports.getData = void 0;
-var index_1 = require("../index");
-var nGram_1 = require("../nGram");
+exports.parseQuery = exports.startsWith = exports.SearchQuery = exports.docID = exports.getTargetFields = exports.getData = void 0;
+var index_1 = require("./index");
+var nGram_1 = require("./nGram");
 function getData(ref, dataOrUndef) {
     return __awaiter(this, void 0, void 0, function () {
         var data, snap, _data;
@@ -131,24 +140,22 @@ function getTargetFields(data, fieldsOrUndef) {
     return targetFields;
 }
 exports.getTargetFields = getTargetFields;
-function docID(refID, field) {
-    return refID + "." + field;
+function docID(refID, field, n) {
+    return refID + "." + field + "." + n;
 }
 exports.docID = docID;
 var SearchQuery = /** @class */ (function () {
     function SearchQuery(ref, n) {
-        this._where = [];
         this.ref = ref;
-        this.n = n !== null && n !== void 0 ? n : 3;
-        this._limit = 500;
+        this.n = n !== null && n !== void 0 ? n : 2;
+        this.query = ref;
     }
     SearchQuery.prototype.where = function (fieldPath, opStr, value) {
-        this._where.push({ fieldPath: fieldPath, opStr: opStr, value: value });
+        this.query = this.query.where(fieldPath, opStr, value);
         return this;
     };
     SearchQuery.prototype.orderBy = function (fieldPath, directionStr) {
-        var _order = directionStr !== null && directionStr !== void 0 ? directionStr : "asc";
-        this._orderBy = { fieldPath: "order", directionStr: _order };
+        this.query = this.query.orderBy(fieldPath, directionStr);
         return this;
     };
     SearchQuery.prototype.startAt = function () {
@@ -156,7 +163,7 @@ var SearchQuery = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             fieldValues[_i] = arguments[_i];
         }
-        this._startAt = fieldValues;
+        this.query = this.query.startAt(fieldValues);
         return this;
     };
     SearchQuery.prototype.startAfter = function () {
@@ -164,7 +171,7 @@ var SearchQuery = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             fieldValues[_i] = arguments[_i];
         }
-        this._startAfter = fieldValues;
+        this.query = this.query.startAfter(fieldValues);
         return this;
     };
     SearchQuery.prototype.endAt = function () {
@@ -172,7 +179,7 @@ var SearchQuery = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             fieldValues[_i] = arguments[_i];
         }
-        this._endAt = fieldValues;
+        this.query = this.query.endAt(fieldValues);
         return this;
     };
     SearchQuery.prototype.endBefore = function () {
@@ -180,72 +187,69 @@ var SearchQuery = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             fieldValues[_i] = arguments[_i];
         }
-        this._endBefore = fieldValues;
+        this.query = this.query.endBefore(fieldValues);
         return this;
     };
     SearchQuery.prototype.limit = function (limit) {
-        this._limit = limit;
+        this.query = this.query.limit(limit);
         return this;
     };
     SearchQuery.prototype.search = function (searchQuery, searchOptions) {
-        this._searchQuery = searchQuery;
-        this._options = searchOptions;
+        var _this = this;
+        var fields = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.fields;
+        if (fields)
+            this.query = this.query.where(index_1.fieldPaths.tokens + "." + index_1.fieldPaths.field, "in", fields);
+        if (searchQuery) {
+            var _searchQuery = parseQuery(searchQuery, { n: this.n });
+            _searchQuery.words.forEach(function (word) {
+                _this.query = _this.query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
+            });
+        }
         return this;
     };
     SearchQuery.prototype.get = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var query, fields, _searchQuery, _b, _c, _d, fieldPath, opStr, value, snap, hits, data;
-            var e_2, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
-                    case 0:
-                        query = this.ref;
-                        fields = (_a = this._options) === null || _a === void 0 ? void 0 : _a.fields;
-                        if (fields)
-                            query = query.where(index_1.fieldPaths.tokens + "." + index_1.fieldPaths.field, "in", fields);
-                        if (this._searchQuery) {
-                            _searchQuery = (0, nGram_1.nGram)(this.n, this._searchQuery);
-                            _searchQuery.forEach(function (word) {
-                                query = query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
-                            });
-                        }
+            var snap, hits, refToCount, hits_1, hits_1_1, hit, _count, count, hitData, data;
+            var e_2, _b;
+            return __generator(this, function (_c) {
+                switch (_c.label) {
+                    case 0: return [4 /*yield*/, this.query.get()];
+                    case 1:
+                        snap = _c.sent();
+                        if (snap.empty)
+                            return [2 /*return*/, { hits: [], data: [] }];
+                        hits = snap.docs.map(function (doc) { return doc.data().__ref; });
+                        refToCount = new Map();
                         try {
-                            for (_b = __values(this._where), _c = _b.next(); !_c.done; _c = _b.next()) {
-                                _d = _c.value, fieldPath = _d.fieldPath, opStr = _d.opStr, value = _d.value;
-                                query = query.where(fieldPath, opStr, value);
+                            for (hits_1 = __values(hits), hits_1_1 = hits_1.next(); !hits_1_1.done; hits_1_1 = hits_1.next()) {
+                                hit = hits_1_1.value;
+                                if (refToCount.has(hit)) {
+                                    _count = (_a = refToCount.get(hit)) !== null && _a !== void 0 ? _a : 0;
+                                    count = _count + 1;
+                                    refToCount.set(hit, count);
+                                }
+                                else {
+                                    refToCount.set(hit, 1);
+                                }
                             }
                         }
                         catch (e_2_1) { e_2 = { error: e_2_1 }; }
                         finally {
                             try {
-                                if (_c && !_c.done && (_e = _b.return)) _e.call(_b);
+                                if (hits_1_1 && !hits_1_1.done && (_b = hits_1.return)) _b.call(hits_1);
                             }
                             finally { if (e_2) throw e_2.error; }
                         }
-                        if (this._orderBy)
-                            query = query.orderBy(this._orderBy.fieldPath, this._orderBy.directionStr);
-                        if (this._startAt)
-                            query = query.startAt(this._startAt);
-                        if (this._startAfter)
-                            query = query.startAfter(this._startAfter);
-                        if (this._endAt)
-                            query = query.startAt(this._endAt);
-                        if (this._endBefore)
-                            query = query.startAt(this._endBefore);
-                        if (this._limit)
-                            query = query.limit(this._limit);
-                        return [4 /*yield*/, query.get()];
-                    case 1:
-                        snap = _f.sent();
-                        if (snap.empty)
-                            return [2 /*return*/, { hits: [], data: [] }];
-                        hits = snap.docs.map(function (doc) { return doc.data().__ref; });
+                        hitData = Array.from(refToCount.entries()).map(function (_a) {
+                            var _b = __read(_a, 2), ref = _b[0], count = _b[1];
+                            return ({ ref: ref, count: count });
+                        });
                         data = snap.docs.map(function (doc) {
                             var _a = doc.data(), _b = _a.__ref, _c = _b === void 0 ? {} : _b, _d = _c, _e = _a.__tokens, _f = _e === void 0 ? {} : _e, _g = _f, data = __rest(_a, ["__ref", "__tokens"]);
                             return data;
                         });
-                        return [2 /*return*/, { hits: Array.from(new Set(hits)), data: Array.from(new Set(data)) }];
+                        return [2 /*return*/, { hits: hitData, data: Array.from(new Set(data)) }];
                 }
             });
         });
@@ -253,3 +257,35 @@ var SearchQuery = /** @class */ (function () {
     return SearchQuery;
 }());
 exports.SearchQuery = SearchQuery;
+function startsWith(query, fieldPath, value) {
+    var start = value.slice(0, value.length - 1);
+    var end = value.slice(value.length - 1, value.length);
+    var v = start + String.fromCharCode(end.charCodeAt(0) + 1);
+    return query
+        .where(fieldPath, '>=', value)
+        .where(fieldPath, '<', v)
+        .orderBy(fieldPath);
+}
+exports.startsWith = startsWith;
+function parseQuery(stringQuery, options) {
+    var _a;
+    var _n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 2;
+    var eachQuery = stringQuery.split(" ");
+    var searchQuery = eachQuery
+        .map(function (query) {
+        if (query.length < _n) {
+            var chars = [];
+            for (var i = 0; i < _n; i++) {
+                chars.push(query[i]);
+            }
+            return chars;
+        }
+        return (0, nGram_1.nGram)(_n, query);
+    })
+        .reduce(function (pre, current) {
+        pre.push.apply(pre, __spreadArray([], __read(current), false));
+        return pre;
+    }, []);
+    return { words: searchQuery };
+}
+exports.parseQuery = parseQuery;

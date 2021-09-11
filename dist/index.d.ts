@@ -1,9 +1,10 @@
 import { CollectionReference, DocumentReference, DocumentData, WriteBatch } from '@google-cloud/firestore';
 import firebase from "firebase";
-import { SearchQuery } from "./utils/firestore";
+import { SearchQuery } from "./firestore";
 export interface IndexEntity {
     __ref: DocumentReference;
     __tokens: Map<string, string | boolean>;
+    values: object;
 }
 export declare const fieldPaths: {
     tokens: string;
@@ -26,8 +27,12 @@ export declare type SearchOptions = {
     fields?: string[];
     limit?: number;
 };
+export declare type HitData = {
+    ref: DocumentReference;
+    count: number;
+};
 export declare type SearchResult = {
-    hits: DocumentReference[];
+    hits: HitData[];
     data: DocumentData[];
 };
 export default class FirestoreSearch {

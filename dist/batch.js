@@ -37,8 +37,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.startsWith = exports.WriteBatch2 = void 0;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+exports.WriteBatch2 = void 0;
 function flatDeep(arr, d) {
     if (d === void 0) { d = 1; }
     return d > 0
@@ -129,13 +128,3 @@ var WriteBatch2 = /** @class */ (function () {
     return WriteBatch2;
 }());
 exports.WriteBatch2 = WriteBatch2;
-function startsWith(query, fieldPath, value) {
-    var start = value.slice(0, value.length - 1);
-    var end = value.slice(value.length - 1, value.length);
-    var v = "" + start + String.fromCharCode(end.charCodeAt(0) + 1);
-    return query
-        .where(fieldPath, '>=', value)
-        .where(fieldPath, '<', v)
-        .orderBy(fieldPath);
-}
-exports.startsWith = startsWith;
