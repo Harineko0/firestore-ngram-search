@@ -136,8 +136,8 @@ function getIndexDocument(docRef, field, data, n) {
     };
     return { field: field, entity: entity, n: n };
 }
-var FirestoreSearch = /** @class */ (function () {
-    function FirestoreSearch(ref, options) {
+var FirestoreNGramSearch = /** @class */ (function () {
+    function FirestoreNGramSearch(ref, options) {
         var _a;
         if (ref instanceof firestore_1.CollectionReference) {
             this.indexRef = ref.doc('fs.v1').collection('index').withConverter(AdminIndexEntityConverter);
@@ -150,7 +150,7 @@ var FirestoreSearch = /** @class */ (function () {
         }
         this.n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 2;
     }
-    FirestoreSearch.prototype.set = function (docRef, options) {
+    FirestoreNGramSearch.prototype.set = function (docRef, options) {
         return __awaiter(this, void 0, void 0, function () {
             var data_1, targetFields, nGramDocs, charDocs, docs, batch_2;
             var _this = this;
@@ -186,7 +186,7 @@ var FirestoreSearch = /** @class */ (function () {
             });
         });
     };
-    FirestoreSearch.prototype.delete = function (docRef, options) {
+    FirestoreNGramSearch.prototype.delete = function (docRef, options) {
         return __awaiter(this, void 0, void 0, function () {
             var data, targetFields, batch_3;
             var _this = this;
@@ -216,9 +216,9 @@ var FirestoreSearch = /** @class */ (function () {
             });
         });
     };
-    FirestoreSearch.prototype.query = function () {
+    FirestoreNGramSearch.prototype.query = function () {
         return new firestore_2.SearchQuery(this.indexRef, this.n);
     };
-    return FirestoreSearch;
+    return FirestoreNGramSearch;
 }());
-exports.default = FirestoreSearch;
+exports.default = FirestoreNGramSearch;

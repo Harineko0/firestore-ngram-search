@@ -35,7 +35,7 @@ export declare type SearchResult = {
     hits: HitData[];
     data: DocumentData[];
 };
-export default class FirestoreSearch {
+export default class FirestoreNGramSearch {
     private readonly db?;
     private readonly indexRef;
     private readonly isAdmin;
