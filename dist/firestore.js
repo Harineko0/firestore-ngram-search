@@ -75,7 +75,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseQuery = exports.startsWith = exports.SearchQuery = exports.docID = exports.getTargetFields = exports.getData = void 0;
 var index_1 = require("./index");
 var nGram_1 = require("./utils/nGram");
-var set_1 = require("./utils/set");
+var array_1 = require("./utils/array");
 function getData(ref, dataOrUndef) {
     return __awaiter(this, void 0, void 0, function () {
         var data, snap, _data;
@@ -213,7 +213,7 @@ var SearchQuery = /** @class */ (function () {
         var searchByChar = (_a = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.searchByChar) !== null && _a !== void 0 ? _a : true;
         if (searchByChar) {
             this.charQuery = this.query;
-            var chars = splitSpace(searchQuery).map(function (value) { return value.split(''); }).reduce(convertOneArray, []);
+            var chars = splitSpace(searchQuery).map(function (value) { return value.split(''); }).reduce(array_1.convertOneArray, []);
             chars.forEach(function (char) {
                 var _a;
                 _this.charQuery = (_a = _this.charQuery) === null || _a === void 0 ? void 0 : _a.where(index_1.fieldPaths.tokens + "." + char, "==", true);
@@ -224,18 +224,18 @@ var SearchQuery = /** @class */ (function () {
     SearchQuery.prototype.get = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var snap, charSnap, docs, charDocs, refs, hitToCount, refToCount, refs_1, refs_1_1, ref, hasKey, keys, keys_1, keys_1_1, key, _count, count, hitData, data;
-            var e_2, _b, e_3, _c;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
+            var snap, charSnap, docs, charDocs, refs, idToCount, refs_1, refs_1_1, ref, hasKey, ids_3, ids_1, ids_1_1, id, _count, count, idToRef, ids, _loop_1, ids_2, ids_2_1, id, hitData, data;
+            var e_2, _b, e_3, _c, e_4, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
                     case 0: return [4 /*yield*/, this.query.get()];
                     case 1:
-                        snap = _d.sent();
+                        snap = _e.sent();
                         if (!this.charQuery) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.charQuery.get()];
                     case 2:
-                        charSnap = _d.sent();
-                        _d.label = 3;
+                        charSnap = _e.sent();
+                        _e.label = 3;
                     case 3:
                         if (snap.empty)
                             return [2 /*return*/, { hits: [], data: [] }];
@@ -248,17 +248,16 @@ var SearchQuery = /** @class */ (function () {
                             docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charDocs), false);
                         }
                         refs = docs.map(function (doc) { return doc.data().__ref; });
-                        hitToCount = new Map();
-                        refToCount = new Map();
+                        idToCount = new Map();
                         try {
                             for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
                                 ref = refs_1_1.value;
                                 hasKey = false;
-                                keys = hitToCount.keys();
+                                ids_3 = idToCount.keys();
                                 try {
-                                    for (keys_1 = (e_3 = void 0, __values(keys)), keys_1_1 = keys_1.next(); !keys_1_1.done; keys_1_1 = keys_1.next()) {
-                                        key = keys_1_1.value;
-                                        if (key === ref.id) {
+                                    for (ids_1 = (e_3 = void 0, __values(ids_3)), ids_1_1 = ids_1.next(); !ids_1_1.done; ids_1_1 = ids_1.next()) {
+                                        id = ids_1_1.value;
+                                        if (id === ref.id) {
                                             {
                                                 hasKey = true;
                                                 break;
@@ -269,19 +268,17 @@ var SearchQuery = /** @class */ (function () {
                                 catch (e_3_1) { e_3 = { error: e_3_1 }; }
                                 finally {
                                     try {
-                                        if (keys_1_1 && !keys_1_1.done && (_c = keys_1.return)) _c.call(keys_1);
+                                        if (ids_1_1 && !ids_1_1.done && (_c = ids_1.return)) _c.call(ids_1);
                                     }
                                     finally { if (e_3) throw e_3.error; }
                                 }
                                 if (hasKey) {
-                                    _count = (_a = hitToCount.get(ref.id)) !== null && _a !== void 0 ? _a : 0;
+                                    _count = (_a = idToCount.get(ref.id)) !== null && _a !== void 0 ? _a : 0;
                                     count = _count + 1;
-                                    hitToCount.set(ref.id, count);
-                                    refToCount.set(ref, count);
+                                    idToCount.set(ref.id, count);
                                 }
                                 else {
-                                    hitToCount.set(ref.id, 1);
-                                    refToCount.set(ref, 1);
+                                    idToCount.set(ref.id, 1);
                                 }
                             }
                         }
@@ -292,12 +289,36 @@ var SearchQuery = /** @class */ (function () {
                             }
                             finally { if (e_2) throw e_2.error; }
                         }
-                        hitData = Array.from(refToCount.entries()).map(function (_a) {
-                            var _b = __read(_a, 2), ref = _b[0], count = _b[1];
-                            return ({ ref: ref, count: count });
-                        });
-                        data = docs.map(function (doc) { return doc.data().values; });
-                        return [2 /*return*/, { hits: hitData, data: Array.from(new set_1.DeepSet(data)) }];
+                        idToRef = new Map();
+                        ids = idToCount.keys();
+                        _loop_1 = function (id) {
+                            idToRef.set(id, refs.filter(function (ref) { return ref.id !== id; })[0]);
+                        };
+                        try {
+                            for (ids_2 = __values(ids), ids_2_1 = ids_2.next(); !ids_2_1.done; ids_2_1 = ids_2.next()) {
+                                id = ids_2_1.value;
+                                _loop_1(id);
+                            }
+                        }
+                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                        finally {
+                            try {
+                                if (ids_2_1 && !ids_2_1.done && (_d = ids_2.return)) _d.call(ids_2);
+                            }
+                            finally { if (e_4) throw e_4.error; }
+                        }
+                        hitData = Array.from(idToCount.entries())
+                            .map(function (_a) {
+                            var _b = __read(_a, 2), id = _b[0], count = _b[1];
+                            var ref = idToRef.get(id);
+                            if (ref) {
+                                return ({ ref: ref, count: count });
+                            }
+                            return null;
+                        })
+                            .filter(function (value) { return value !== null; });
+                        data = docs.map(function (doc) { return doc.data().values; }).filter(array_1.removeDuplicate);
+                        return [2 /*return*/, { hits: hitData, data: data }];
                 }
             });
         });
@@ -319,16 +340,11 @@ function splitSpace(string) {
     var eachQuery = string.split(' ');
     return eachQuery.filter(function (value) { return value !== ''; });
 }
-// convert two-dimensional array to one-dimensional array
-function convertOneArray(pre, current) {
-    pre.push.apply(pre, __spreadArray([], __read(current), false));
-    return pre;
-}
 function parseQuery(stringQuery, options) {
     var _a;
     var _n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 2;
     var eachQuery = splitSpace(stringQuery);
-    var searchQuery = eachQuery.map(function (query) { return (0, nGram_1.nGram)(_n, query); }).reduce(convertOneArray, []);
+    var searchQuery = eachQuery.map(function (query) { return (0, nGram_1.nGram)(_n, query); }).reduce(array_1.convertOneArray, []);
     return { words: searchQuery };
 }
 exports.parseQuery = parseQuery;

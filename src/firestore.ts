@@ -1,8 +1,15 @@
-import {CollectionReference, DocumentData, DocumentReference, FieldPath, Query, QuerySnapshot} from "@google-cloud/firestore";
+import {
+    CollectionReference,
+    DocumentData,
+    DocumentReference,
+    FieldPath,
+    Query,
+    QuerySnapshot
+} from "@google-cloud/firestore";
 import {fieldPaths, HitData, IndexEntity, SearchOptions, SearchResult} from "./index";
 import firebase from "firebase";
 import {nGram} from "./utils/nGram";
-import {DeepSet} from "./utils/set";
+import {convertOneArray, removeDuplicate} from "./utils/array";
 
 export async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
     let data = dataOrUndef;
@@ -139,7 +146,7 @@ export class SearchQuery {
 
     async get(): Promise<SearchResult> {
         const snap = await this.query.get();
-        let charSnap;
+        let charSnap: QuerySnapshot | firebase.firestore.QuerySnapshot | undefined;
         if (this.charQuery) {
             charSnap = await this.charQuery.get();
         }
@@ -156,30 +163,40 @@ export class SearchQuery {
         }
 
         let refs = docs.map(doc => doc.data().__ref);
-        const hitToCount: Map<string, number> = new Map<string, number>();
-        const refToCount: Map<DocumentReference, number> = new Map<DocumentReference, number>();
+        const idToCount: Map<string, number> = new Map<string, number>();
         for (const ref of refs) {
             let hasKey = false;
-            const keys = hitToCount.keys();
-            for (const key of keys) {
-                if (key === ref.id) {{
+            const ids = idToCount.keys();
+            for (const id of ids) {
+                if (id === ref.id) {{
                     hasKey = true;
                     break;
                 }}
             }
             if (hasKey) {
-                const _count = hitToCount.get(ref.id) ?? 0;
+                const _count = idToCount.get(ref.id) ?? 0;
                 const count = _count + 1;
-                hitToCount.set(ref.id, count);
-                refToCount.set(ref, count);
+                idToCount.set(ref.id, count);
             } else {
-                hitToCount.set(ref.id, 1);
-                refToCount.set(ref, 1);
+                idToCount.set(ref.id, 1);
             }
         }
-        const hitData: HitData[] = Array.from(refToCount.entries()).map(([ref, count]) => ({ref: ref, count: count}));
-        const data = docs.map(doc => doc.data().values)
-        return {hits: hitData, data: Array.from(new DeepSet(data))};
+        const idToRef: Map<string, DocumentReference> = new Map<string, FirebaseFirestore.DocumentReference>();
+        const ids = idToCount.keys();
+        for (const id of ids) {
+            idToRef.set(id, refs.filter(ref => ref.id !== id)[0]);
+        }
+        const hitData: HitData[] = Array.from(idToCount.entries())
+            .map(([id, count]) => {
+            const ref = idToRef.get(id);
+            if (ref) {
+                return ({ref: ref, count: count});
+            }
+            return null;
+            })
+            .filter((value): value is HitData => value !== null);
+        const data = docs.map(doc => doc.data().values).filter(removeDuplicate);
+        return {hits: hitData, data: data};
     }
 }
 
@@ -206,11 +223,6 @@ export type ParseOptions = {
 function splitSpace(string: string): string[] {
     const eachQuery: string[] = string.split(' ');
     return  eachQuery.filter(value => value !== '');
-}
-// convert two-dimensional array to one-dimensional array
-function convertOneArray(pre: string[], current: string[]): string[] {
-    pre.push(...current);
-    return pre;
 }
 export function parseQuery(stringQuery: string, options?: ParseOptions): SearchValue {
     const _n = options?.n ?? 2;
