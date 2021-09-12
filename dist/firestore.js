@@ -224,7 +224,7 @@ var SearchQuery = /** @class */ (function () {
     SearchQuery.prototype.get = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var snap, charSnap, docs, charDocs, refs, hitToCount, refToCount, refs_1, refs_1_1, hit, _count, count, hitData, data;
+            var snap, charSnap, docs, charDocs, refs, hitToCount, refToCount, refs_1, refs_1_1, ref, _count, count, hitData, data;
             var e_2, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -248,20 +248,20 @@ var SearchQuery = /** @class */ (function () {
                             docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charDocs), false);
                         }
                         refs = docs.map(function (doc) { return doc.data().__ref; });
-                        hitToCount = new Map();
+                        hitToCount = new set_1.StringMap();
                         refToCount = new Map();
                         try {
                             for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
-                                hit = refs_1_1.value;
-                                if (hitToCount.has(hit.id)) {
-                                    _count = (_a = hitToCount.get(hit.id)) !== null && _a !== void 0 ? _a : 0;
+                                ref = refs_1_1.value;
+                                if (hitToCount.has(ref.id)) {
+                                    _count = (_a = hitToCount.get(ref.id)) !== null && _a !== void 0 ? _a : 0;
                                     count = _count + 1;
-                                    hitToCount.set(hit.id, count);
-                                    refToCount.set(hit, count);
+                                    hitToCount.set(ref.id, count);
+                                    refToCount.set(ref, count);
                                 }
                                 else {
-                                    hitToCount.set(hit.id, 1);
-                                    refToCount.set(hit, 1);
+                                    hitToCount.set(ref.id, 1);
+                                    refToCount.set(ref, 1);
                                 }
                             }
                         }
