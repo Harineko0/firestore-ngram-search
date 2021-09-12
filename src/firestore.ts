@@ -56,6 +56,7 @@ export class SearchQuery {
     private readonly ref: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>;
     private readonly n: number;
     private query: Query<IndexEntity> | firebase.firestore.Query<IndexEntity>;
+    private charQuery?: Query<IndexEntity> | firebase.firestore.Query<IndexEntity>;
 
     constructor(ref: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>, n?: number) {
         this.ref = ref;
@@ -65,36 +66,50 @@ export class SearchQuery {
 
     where(fieldPath: string, opStr: WhereFilterOp, value: any): SearchQuery {
         this.query = this.query.where(fieldPath, opStr, value);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.where(fieldPath, opStr, value);
         return this;
     }
 
     orderBy(fieldPath: string, directionStr?: OrderByDirection): SearchQuery {
         this.query = this.query.orderBy(fieldPath, directionStr);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.orderBy(fieldPath, directionStr);
         return this;
     }
 
     startAt(...fieldValues: any[]): SearchQuery {
         this.query = this.query.startAt(fieldValues);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.startAt(fieldValues);
         return this;
     }
 
     startAfter(...fieldValues: any[]): SearchQuery {
         this.query = this.query.startAfter(fieldValues);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.startAfter(fieldValues);
         return this;
     }
 
     endAt(...fieldValues: any[]): SearchQuery {
         this.query = this.query.endAt(fieldValues);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.endAt(fieldValues);
         return this;
     }
 
     endBefore(...fieldValues: any[]): SearchQuery {
         this.query = this.query.endBefore(fieldValues);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.endBefore(fieldValues);
         return this;
     }
 
     limit(limit: number): SearchQuery {
         this.query = this.query.limit(limit);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.limit(limit);
         return this;
     }
 
@@ -109,25 +124,43 @@ export class SearchQuery {
                 this.query = this.query.where(`${fieldPaths.tokens}.${word}`, "==", true);
             })
         }
+
+        const searchByChar = searchOptions?.searchByChar ?? true;
+        if (searchByChar) {
+            this.charQuery = this.query;
+            const chars = searchQuery.split('');
+            chars.forEach(char => {
+                this.charQuery = this.charQuery?.where(`${fieldPaths.tokens}.${char}`, "==", true);
+            })
+        }
         return this;
     }
 
     async get(): Promise<SearchResult> {
         const snap = await this.query.get();
+        let charSnap;
+        if (this.charQuery) {
+            charSnap = await this.charQuery.get();
+        }
         if (snap.empty)
             return {hits: [], data: []};
-        const refs = snap.docs.map(doc => doc.data().__ref);
-        const idToCount: Map<string, number> = new Map<string, number>();
+        if (charSnap?.empty)
+            return {hits: [], data: []};
+
+        let refs = snap.docs.map(doc => doc.data().__ref);
+        if (charSnap) {
+            const charRefs = charSnap.docs.map(doc => doc.data().__ref);
+            refs = [...refs, ...charRefs];
+        }
+
         const refToCount: Map<DocumentReference, number> = new Map<DocumentReference, number>();
-        for (const ref of refs) {
-            if (idToCount.has(ref.id)) {
-                const _count = idToCount.get(ref.id) ?? 0;
+        for (const hit of refs) {
+            if (refToCount.has(hit)) {
+                const _count = refToCount.get(hit) ?? 0;
                 const count = _count + 1;
-                idToCount.set(ref.id, count);
-                refToCount.set(ref, count);
+                refToCount.set(hit, count);
             } else {
-                idToCount.set(ref.id, 1);
-                refToCount.set(ref, 1);
+                refToCount.set(hit, 1);
             }
         }
         const hitData: HitData[] = Array.from(refToCount.entries()).map(([ref, count]) => ({ref: ref, count: count}));
@@ -161,12 +194,7 @@ export function parseQuery(stringQuery: string, options?: ParseOptions): SearchV
     let eachQuery: string[] = stringQuery.split(" ");
     eachQuery = eachQuery.filter(value => value !== '');
     const searchQuery: string[] = eachQuery
-        .map(query => {
-            if (query.length < _n) {
-                return query.split("");
-            }
-            return nGram(_n, query)
-        })
+        .map(query =>  nGram(_n, query))
         .reduce((pre, current) => {
             pre.push(...current);
             return pre;

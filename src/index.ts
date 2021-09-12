@@ -78,6 +78,7 @@ export type DeleteOptions = {
 export type SearchOptions = {
     fields?: string[];
     limit?: number;
+    searchByChar?: boolean;
 }
 
 export type HitData = {
