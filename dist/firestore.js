@@ -141,10 +141,14 @@ var SearchQuery = /** @class */ (function () {
     }
     SearchQuery.prototype.where = function (fieldPath, opStr, value) {
         this.query = this.query.where(fieldPath, opStr, value);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.where(fieldPath, opStr, value);
         return this;
     };
     SearchQuery.prototype.orderBy = function (fieldPath, directionStr) {
         this.query = this.query.orderBy(fieldPath, directionStr);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.orderBy(fieldPath, directionStr);
         return this;
     };
     SearchQuery.prototype.startAt = function () {
@@ -153,6 +157,8 @@ var SearchQuery = /** @class */ (function () {
             fieldValues[_i] = arguments[_i];
         }
         this.query = this.query.startAt(fieldValues);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.startAt(fieldValues);
         return this;
     };
     SearchQuery.prototype.startAfter = function () {
@@ -161,6 +167,8 @@ var SearchQuery = /** @class */ (function () {
             fieldValues[_i] = arguments[_i];
         }
         this.query = this.query.startAfter(fieldValues);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.startAfter(fieldValues);
         return this;
     };
     SearchQuery.prototype.endAt = function () {
@@ -169,6 +177,8 @@ var SearchQuery = /** @class */ (function () {
             fieldValues[_i] = arguments[_i];
         }
         this.query = this.query.endAt(fieldValues);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.endAt(fieldValues);
         return this;
     };
     SearchQuery.prototype.endBefore = function () {
@@ -177,14 +187,19 @@ var SearchQuery = /** @class */ (function () {
             fieldValues[_i] = arguments[_i];
         }
         this.query = this.query.endBefore(fieldValues);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.endBefore(fieldValues);
         return this;
     };
     SearchQuery.prototype.limit = function (limit) {
         this.query = this.query.limit(limit);
+        if (this.charQuery)
+            this.charQuery = this.charQuery.limit(limit);
         return this;
     };
     SearchQuery.prototype.search = function (searchQuery, searchOptions) {
         var _this = this;
+        var _a;
         var fields = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.fields;
         if (fields)
             this.query = this.query.where(index_1.fieldPaths.tokens + "." + index_1.fieldPaths.field, "in", fields);
@@ -194,35 +209,53 @@ var SearchQuery = /** @class */ (function () {
                 _this.query = _this.query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
             });
         }
+        var searchByChar = (_a = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.searchByChar) !== null && _a !== void 0 ? _a : true;
+        if (searchByChar) {
+            this.charQuery = this.query;
+            var chars = searchQuery.split('');
+            chars.forEach(function (char) {
+                var _a;
+                _this.charQuery = (_a = _this.charQuery) === null || _a === void 0 ? void 0 : _a.where(index_1.fieldPaths.tokens + "." + char, "==", true);
+            });
+        }
         return this;
     };
     SearchQuery.prototype.get = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var snap, refs, idToCount, refToCount, refs_1, refs_1_1, ref, _count, count, hitData, data;
+            var snap, charSnap, refs, charRefs, refToCount, refs_1, refs_1_1, hit, _count, count, hitData, data;
             var e_2, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0: return [4 /*yield*/, this.query.get()];
                     case 1:
                         snap = _c.sent();
+                        if (!this.charQuery) return [3 /*break*/, 3];
+                        return [4 /*yield*/, this.charQuery.get()];
+                    case 2:
+                        charSnap = _c.sent();
+                        _c.label = 3;
+                    case 3:
                         if (snap.empty)
                             return [2 /*return*/, { hits: [], data: [] }];
+                        if (charSnap === null || charSnap === void 0 ? void 0 : charSnap.empty)
+                            return [2 /*return*/, { hits: [], data: [] }];
                         refs = snap.docs.map(function (doc) { return doc.data().__ref; });
-                        idToCount = new Map();
+                        if (charSnap) {
+                            charRefs = charSnap.docs.map(function (doc) { return doc.data().__ref; });
+                            refs = __spreadArray(__spreadArray([], __read(refs), false), __read(charRefs), false);
+                        }
                         refToCount = new Map();
                         try {
                             for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
-                                ref = refs_1_1.value;
-                                if (idToCount.has(ref.id)) {
-                                    _count = (_a = idToCount.get(ref.id)) !== null && _a !== void 0 ? _a : 0;
+                                hit = refs_1_1.value;
+                                if (refToCount.has(hit)) {
+                                    _count = (_a = refToCount.get(hit)) !== null && _a !== void 0 ? _a : 0;
                                     count = _count + 1;
-                                    idToCount.set(ref.id, count);
-                                    refToCount.set(ref, count);
+                                    refToCount.set(hit, count);
                                 }
                                 else {
-                                    idToCount.set(ref.id, 1);
-                                    refToCount.set(ref, 1);
+                                    refToCount.set(hit, 1);
                                 }
                             }
                         }
@@ -262,12 +295,7 @@ function parseQuery(stringQuery, options) {
     var eachQuery = stringQuery.split(" ");
     eachQuery = eachQuery.filter(function (value) { return value !== ''; });
     var searchQuery = eachQuery
-        .map(function (query) {
-        if (query.length < _n) {
-            return query.split("");
-        }
-        return (0, nGram_1.nGram)(_n, query);
-    })
+        .map(function (query) { return (0, nGram_1.nGram)(_n, query); })
         .reduce(function (pre, current) {
         pre.push.apply(pre, __spreadArray([], __read(current), false));
         return pre;

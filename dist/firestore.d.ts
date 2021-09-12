@@ -10,6 +10,7 @@ export declare class SearchQuery {
     private readonly ref;
     private readonly n;
     private query;
+    private charQuery?;
     constructor(ref: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>, n?: number);
     where(fieldPath: string, opStr: WhereFilterOp, value: any): SearchQuery;
     orderBy(fieldPath: string, directionStr?: OrderByDirection): SearchQuery;
