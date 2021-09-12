@@ -35,17 +35,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __values = (this && this.__values) || function(o) {
     var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
     if (m) return m.call(o);
@@ -210,7 +199,7 @@ var SearchQuery = /** @class */ (function () {
     SearchQuery.prototype.get = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var snap, hits, refToCount, hits_1, hits_1_1, hit, _count, count, hitData, data;
+            var snap, refs, idToCount, refToCount, refs_1, refs_1_1, ref, _count, count, hitData, data;
             var e_2, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -219,25 +208,28 @@ var SearchQuery = /** @class */ (function () {
                         snap = _c.sent();
                         if (snap.empty)
                             return [2 /*return*/, { hits: [], data: [] }];
-                        hits = snap.docs.map(function (doc) { return doc.data().__ref; });
+                        refs = snap.docs.map(function (doc) { return doc.data().__ref; });
+                        idToCount = new Map();
                         refToCount = new Map();
                         try {
-                            for (hits_1 = __values(hits), hits_1_1 = hits_1.next(); !hits_1_1.done; hits_1_1 = hits_1.next()) {
-                                hit = hits_1_1.value;
-                                if (refToCount.has(hit)) {
-                                    _count = (_a = refToCount.get(hit)) !== null && _a !== void 0 ? _a : 0;
+                            for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
+                                ref = refs_1_1.value;
+                                if (idToCount.has(ref.id)) {
+                                    _count = (_a = idToCount.get(ref.id)) !== null && _a !== void 0 ? _a : 0;
                                     count = _count + 1;
-                                    refToCount.set(hit, count);
+                                    idToCount.set(ref.id, count);
+                                    refToCount.set(ref, count);
                                 }
                                 else {
-                                    refToCount.set(hit, 1);
+                                    idToCount.set(ref.id, 1);
+                                    refToCount.set(ref, 1);
                                 }
                             }
                         }
                         catch (e_2_1) { e_2 = { error: e_2_1 }; }
                         finally {
                             try {
-                                if (hits_1_1 && !hits_1_1.done && (_b = hits_1.return)) _b.call(hits_1);
+                                if (refs_1_1 && !refs_1_1.done && (_b = refs_1.return)) _b.call(refs_1);
                             }
                             finally { if (e_2) throw e_2.error; }
                         }
@@ -245,10 +237,7 @@ var SearchQuery = /** @class */ (function () {
                             var _b = __read(_a, 2), ref = _b[0], count = _b[1];
                             return ({ ref: ref, count: count });
                         });
-                        data = snap.docs.map(function (doc) {
-                            var _a = doc.data(), _b = _a.__ref, _c = _b === void 0 ? {} : _b, _d = _c, _e = _a.__tokens, _f = _e === void 0 ? {} : _e, _g = _f, data = __rest(_a, ["__ref", "__tokens"]);
-                            return data;
-                        });
+                        data = snap.docs.map(function (doc) { return doc.data().values; });
                         return [2 /*return*/, { hits: hitData, data: Array.from(new Set(data)) }];
                 }
             });

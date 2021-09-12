@@ -116,22 +116,22 @@ export class SearchQuery {
         const snap = await this.query.get();
         if (snap.empty)
             return {hits: [], data: []};
-        const hits = snap.docs.map(doc => doc.data().__ref);
+        const refs = snap.docs.map(doc => doc.data().__ref);
+        const idToCount: Map<string, number> = new Map<string, number>();
         const refToCount: Map<DocumentReference, number> = new Map<DocumentReference, number>();
-        for (const hit of hits) {
-            if (refToCount.has(hit)) {
-                const _count = refToCount.get(hit) ?? 0;
+        for (const ref of refs) {
+            if (idToCount.has(ref.id)) {
+                const _count = idToCount.get(ref.id) ?? 0;
                 const count = _count + 1;
-                refToCount.set(hit, count);
+                idToCount.set(ref.id, count);
+                refToCount.set(ref, count);
             } else {
-                refToCount.set(hit, 1);
+                idToCount.set(ref.id, 1);
+                refToCount.set(ref, 1);
             }
         }
         const hitData: HitData[] = Array.from(refToCount.entries()).map(([ref, count]) => ({ref: ref, count: count}));
-        const data = snap.docs.map(doc => {
-            const {__ref: {} = {}, __tokens: {} = {}, ...data} = doc.data()
-            return data;
-        })
+        const data = snap.docs.map(doc => doc.data().values)
         return {hits: hitData, data: Array.from(new Set(data))};
     }
 }
