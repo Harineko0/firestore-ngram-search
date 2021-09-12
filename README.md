@@ -1,10 +1,11 @@
 # Firestore-nGram-Search
 Firestore-nGram-Search provides full-text search using nGram.  
-Only Firebase 8 support.
+Only Firebase 8 is supported.
 
 - [x] Any language support  
 - [x] Firestore query support
 - [x] Works on client (limited)
+- [ ] Firebase 9 support
 
 ## Usage
 
