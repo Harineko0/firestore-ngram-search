@@ -74,7 +74,8 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseQuery = exports.startsWith = exports.SearchQuery = exports.docID = exports.getTargetFields = exports.getData = void 0;
 var index_1 = require("./index");
-var nGram_1 = require("./nGram");
+var nGram_1 = require("./utils/nGram");
+var set_1 = require("./utils/set");
 function getData(ref, dataOrUndef) {
     return __awaiter(this, void 0, void 0, function () {
         var data, snap, _data;
@@ -223,7 +224,7 @@ var SearchQuery = /** @class */ (function () {
     SearchQuery.prototype.get = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var snap, charSnap, docs, charDocs, refs, refToCount, refs_1, refs_1_1, hit, _count, count, hitData, data;
+            var snap, charSnap, docs, charDocs, refs, hitToCount, refToCount, refs_1, refs_1_1, hit, _count, count, hitData, data;
             var e_2, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -247,16 +248,19 @@ var SearchQuery = /** @class */ (function () {
                             docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charDocs), false);
                         }
                         refs = docs.map(function (doc) { return doc.data().__ref; });
+                        hitToCount = new Map();
                         refToCount = new Map();
                         try {
                             for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
                                 hit = refs_1_1.value;
-                                if (refToCount.has(hit)) {
-                                    _count = (_a = refToCount.get(hit)) !== null && _a !== void 0 ? _a : 0;
+                                if (hitToCount.has(hit.id)) {
+                                    _count = (_a = hitToCount.get(hit.id)) !== null && _a !== void 0 ? _a : 0;
                                     count = _count + 1;
+                                    hitToCount.set(hit.id, count);
                                     refToCount.set(hit, count);
                                 }
                                 else {
+                                    hitToCount.set(hit.id, 1);
                                     refToCount.set(hit, 1);
                                 }
                             }
@@ -273,7 +277,7 @@ var SearchQuery = /** @class */ (function () {
                             return ({ ref: ref, count: count });
                         });
                         data = docs.map(function (doc) { return doc.data().values; });
-                        return [2 /*return*/, { hits: hitData, data: Array.from(new Set(data)) }];
+                        return [2 /*return*/, { hits: hitData, data: Array.from(new set_1.DeepSet(data)) }];
                 }
             });
         });

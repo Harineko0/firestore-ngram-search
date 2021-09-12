@@ -85,7 +85,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fieldPaths = void 0;
 var firestore_1 = require("@google-cloud/firestore");
-var nGram_1 = require("./nGram");
+var nGram_1 = require("./utils/nGram");
 var firestore_2 = require("./firestore");
 var batch_1 = require("./batch");
 exports.fieldPaths = {
