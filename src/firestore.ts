@@ -184,7 +184,7 @@ export class SearchQuery {
         const idToRef: Map<string, DocumentReference> = new Map<string, FirebaseFirestore.DocumentReference>();
         const ids = idToCount.keys();
         for (const id of ids) {
-            idToRef.set(id, refs.filter(ref => ref.id !== id)[0]);
+            idToRef.set(id, refs.filter(ref => ref.id === id)[0]);
         }
         const hitData: HitData[] = Array.from(idToCount.entries())
             .map(([id, count]) => {

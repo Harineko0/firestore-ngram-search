@@ -292,7 +292,7 @@ var SearchQuery = /** @class */ (function () {
                         idToRef = new Map();
                         ids = idToCount.keys();
                         _loop_1 = function (id) {
-                            idToRef.set(id, refs.filter(function (ref) { return ref.id !== id; })[0]);
+                            idToRef.set(id, refs.filter(function (ref) { return ref.id === id; })[0]);
                         };
                         try {
                             for (ids_2 = __values(ids), ids_2_1 = ids_2.next(); !ids_2_1.done; ids_2_1 = ids_2.next()) {
