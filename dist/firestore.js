@@ -217,7 +217,7 @@ var SearchQuery = /** @class */ (function () {
         var searchByChar = (_a = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.searchByChar) !== null && _a !== void 0 ? _a : true;
         if (searchByChar) {
             this.charQuery = this.query;
-            var chars = searchQuery.split('');
+            var chars = splitSpace(searchQuery).map(function (value) { return value.split(''); }).reduce(convertOneArray, []);
             chars.forEach(function (char) {
                 var _a;
                 _this.charQuery = (_a = _this.charQuery) === null || _a === void 0 ? void 0 : _a.where(index_1.fieldPaths.tokens + "." + char, "==", true);
@@ -305,17 +305,20 @@ function startsWith(query, fieldPath, value) {
         .orderBy(fieldPath);
 }
 exports.startsWith = startsWith;
+function splitSpace(string) {
+    var eachQuery = string.split(' ');
+    return eachQuery.filter(function (value) { return value !== ''; });
+}
+// convert two-dimensional array to one-dimensional array
+function convertOneArray(pre, current) {
+    pre.push.apply(pre, __spreadArray([], __read(current), false));
+    return pre;
+}
 function parseQuery(stringQuery, options) {
     var _a;
     var _n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 2;
-    var eachQuery = stringQuery.split(" ");
-    eachQuery = eachQuery.filter(function (value) { return value !== ''; });
-    var searchQuery = eachQuery
-        .map(function (query) { return (0, nGram_1.nGram)(_n, query); })
-        .reduce(function (pre, current) {
-        pre.push.apply(pre, __spreadArray([], __read(current), false));
-        return pre;
-    }, []);
+    var eachQuery = splitSpace(stringQuery);
+    var searchQuery = eachQuery.map(function (query) { return (0, nGram_1.nGram)(_n, query); }).reduce(convertOneArray, []);
     return { words: searchQuery };
 }
 exports.parseQuery = parseQuery;

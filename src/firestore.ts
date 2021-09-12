@@ -128,7 +128,7 @@ export class SearchQuery {
         const searchByChar = searchOptions?.searchByChar ?? true;
         if (searchByChar) {
             this.charQuery = this.query;
-            const chars = searchQuery.split('');
+            const chars = splitSpace(searchQuery).map(value => value.split('')).reduce(convertOneArray, []);
             chars.forEach(char => {
                 this.charQuery = this.charQuery?.where(`${fieldPaths.tokens}.${char}`, "==", true);
             })
@@ -200,15 +200,18 @@ export type SearchValue = {
 export type ParseOptions = {
     n?: number;
 }
+function splitSpace(string: string): string[] {
+    const eachQuery: string[] = string.split(' ');
+    return  eachQuery.filter(value => value !== '');
+}
+// convert two-dimensional array to one-dimensional array
+function convertOneArray(pre: string[], current: string[]): string[] {
+    pre.push(...current);
+    return pre;
+}
 export function parseQuery(stringQuery: string, options?: ParseOptions): SearchValue {
     const _n = options?.n ?? 2;
-    let eachQuery: string[] = stringQuery.split(" ");
-    eachQuery = eachQuery.filter(value => value !== '');
-    const searchQuery: string[] = eachQuery
-        .map(query =>  nGram(_n, query))
-        .reduce((pre, current) => {
-            pre.push(...current);
-            return pre;
-        }, []);
+    const eachQuery: string[] = splitSpace(stringQuery);
+    const searchQuery: string[] = eachQuery.map(query =>  nGram(_n, query)).reduce(convertOneArray, []);
     return {words: searchQuery};
 }
