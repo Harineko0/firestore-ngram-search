@@ -55,7 +55,7 @@ const docRef = db.collection('foo').doc('fooID');
 const batch = db.batch();
 batch.set(docRef, fooData);
 await fooSearch.set(docRef, {
-    // Supports batch.
+    // Support batch.
     batch, data: fooData, 
     // Specify the fields to store in index.
     fields: ['title', 'description']

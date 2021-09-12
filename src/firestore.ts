@@ -130,7 +130,8 @@ export class SearchQuery {
         if (searchQuery) {
             const _searchQuery = parseQuery(searchQuery, {n: this.n});
             _searchQuery.words.forEach(word => {
-                this.query = this.query.where(`${fieldPaths.tokens}.${word}`, "==", true);
+                if (word !== '' && word !== ' ')
+                    this.query = this.query.where(`${fieldPaths.tokens}.${word}`, "==", true);
             })
             if (_searchQuery.words.length > 0)
                 this.existsNGramQuery = true;
@@ -141,7 +142,8 @@ export class SearchQuery {
             this.charQuery = this.query;
             const chars = splitSpace(searchQuery).map(value => value.split('')).reduce(convertOneArray, []);
             chars.forEach(char => {
-                this.charQuery = this.charQuery?.where(`${fieldPaths.tokens}.${char}`, "==", true);
+                if (char !== '')
+                    this.charQuery = this.charQuery?.where(`${fieldPaths.tokens}.${char}`, "==", true);
             })
         }
         return this;

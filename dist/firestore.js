@@ -208,7 +208,8 @@ var SearchQuery = /** @class */ (function () {
         if (searchQuery) {
             var _searchQuery = parseQuery(searchQuery, { n: this.n });
             _searchQuery.words.forEach(function (word) {
-                _this.query = _this.query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
+                if (word !== '' && word !== ' ')
+                    _this.query = _this.query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
             });
             if (_searchQuery.words.length > 0)
                 this.existsNGramQuery = true;
@@ -219,7 +220,8 @@ var SearchQuery = /** @class */ (function () {
             var chars = splitSpace(searchQuery).map(function (value) { return value.split(''); }).reduce(array_1.convertOneArray, []);
             chars.forEach(function (char) {
                 var _a;
-                _this.charQuery = (_a = _this.charQuery) === null || _a === void 0 ? void 0 : _a.where(index_1.fieldPaths.tokens + "." + char, "==", true);
+                if (char !== '')
+                    _this.charQuery = (_a = _this.charQuery) === null || _a === void 0 ? void 0 : _a.where(index_1.fieldPaths.tokens + "." + char, "==", true);
             });
         }
         return this;
