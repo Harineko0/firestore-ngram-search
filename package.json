@@ -29,8 +29,5 @@
   },
   "bugs": {
     "url": "https://github.com/Harineko0/firestore-ngram-search/issues"
-  },
-  "publishConfig": {
-    "registry": "https://github.com/Harineko0/firestore-ngram-search"
   }
 }
