@@ -224,18 +224,18 @@ var SearchQuery = /** @class */ (function () {
     SearchQuery.prototype.get = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var snap, charSnap, docs, charDocs, refs, hitToCount, refToCount, refs_1, refs_1_1, ref, _count, count, hitData, data;
-            var e_2, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            var snap, charSnap, docs, charDocs, refs, hitToCount, refToCount, refs_1, refs_1_1, ref, hasKey, keys, keys_1, keys_1_1, key, _count, count, hitData, data;
+            var e_2, _b, e_3, _c;
+            return __generator(this, function (_d) {
+                switch (_d.label) {
                     case 0: return [4 /*yield*/, this.query.get()];
                     case 1:
-                        snap = _c.sent();
+                        snap = _d.sent();
                         if (!this.charQuery) return [3 /*break*/, 3];
                         return [4 /*yield*/, this.charQuery.get()];
                     case 2:
-                        charSnap = _c.sent();
-                        _c.label = 3;
+                        charSnap = _d.sent();
+                        _d.label = 3;
                     case 3:
                         if (snap.empty)
                             return [2 /*return*/, { hits: [], data: [] }];
@@ -248,12 +248,32 @@ var SearchQuery = /** @class */ (function () {
                             docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charDocs), false);
                         }
                         refs = docs.map(function (doc) { return doc.data().__ref; });
-                        hitToCount = new set_1.StringMap();
+                        hitToCount = new Map();
                         refToCount = new Map();
                         try {
                             for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
                                 ref = refs_1_1.value;
-                                if (hitToCount.has(ref.id)) {
+                                hasKey = false;
+                                keys = hitToCount.keys();
+                                try {
+                                    for (keys_1 = (e_3 = void 0, __values(keys)), keys_1_1 = keys_1.next(); !keys_1_1.done; keys_1_1 = keys_1.next()) {
+                                        key = keys_1_1.value;
+                                        if (key === ref.id) {
+                                            {
+                                                hasKey = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                                finally {
+                                    try {
+                                        if (keys_1_1 && !keys_1_1.done && (_c = keys_1.return)) _c.call(keys_1);
+                                    }
+                                    finally { if (e_3) throw e_3.error; }
+                                }
+                                if (hasKey) {
                                     _count = (_a = hitToCount.get(ref.id)) !== null && _a !== void 0 ? _a : 0;
                                     count = _count + 1;
                                     hitToCount.set(ref.id, count);

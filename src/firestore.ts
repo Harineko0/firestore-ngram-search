@@ -2,7 +2,7 @@ import {CollectionReference, DocumentData, DocumentReference, FieldPath, Query, 
 import {fieldPaths, HitData, IndexEntity, SearchOptions, SearchResult} from "./index";
 import firebase from "firebase";
 import {nGram} from "./utils/nGram";
-import {DeepSet, StringMap} from "./utils/set";
+import {DeepSet} from "./utils/set";
 
 export async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
     let data = dataOrUndef;
@@ -156,10 +156,18 @@ export class SearchQuery {
         }
 
         let refs = docs.map(doc => doc.data().__ref);
-        const hitToCount: Map<string, number> = new StringMap<string, number>();
+        const hitToCount: Map<string, number> = new Map<string, number>();
         const refToCount: Map<DocumentReference, number> = new Map<DocumentReference, number>();
         for (const ref of refs) {
-            if (hitToCount.has(ref.id)) {
+            let hasKey = false;
+            const keys = hitToCount.keys();
+            for (const key of keys) {
+                if (key === ref.id) {{
+                    hasKey = true;
+                    break;
+                }}
+            }
+            if (hasKey) {
                 const _count = hitToCount.get(ref.id) ?? 0;
                 const count = _count + 1;
                 hitToCount.set(ref.id, count);

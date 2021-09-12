@@ -26,7 +26,7 @@ var __values = (this && this.__values) || function(o) {
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.StringMap = exports.DeepSet = void 0;
+exports.DeepSet = void 0;
 var DeepSet = /** @class */ (function (_super) {
     __extends(DeepSet, _super);
     function DeepSet() {
@@ -58,36 +58,3 @@ var DeepSet = /** @class */ (function (_super) {
     return DeepSet;
 }(Set));
 exports.DeepSet = DeepSet;
-var StringMap = /** @class */ (function (_super) {
-    __extends(StringMap, _super);
-    function StringMap() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    StringMap.prototype.has = function (key) {
-        var e_2, _a;
-        if (typeof key === 'string') {
-            var thisKeys = this.keys();
-            var has = false;
-            try {
-                for (var thisKeys_1 = __values(thisKeys), thisKeys_1_1 = thisKeys_1.next(); !thisKeys_1_1.done; thisKeys_1_1 = thisKeys_1.next()) {
-                    var thisKey = thisKeys_1_1.value;
-                    if (thisKey == key) {
-                        has = true;
-                        break;
-                    }
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (thisKeys_1_1 && !thisKeys_1_1.done && (_a = thisKeys_1.return)) _a.call(thisKeys_1);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-            return has;
-        }
-        return false;
-    };
-    return StringMap;
-}(Map));
-exports.StringMap = StringMap;
