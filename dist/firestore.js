@@ -71,14 +71,9 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     }
     return to.concat(ar || Array.prototype.slice.call(from));
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseQuery = exports.startsWith = exports.SearchQuery = exports.docID = exports.getTargetFields = exports.getData = void 0;
-var firestore_1 = require("@google-cloud/firestore");
 var index_1 = require("./index");
-var firebase_1 = __importDefault(require("firebase"));
 var nGram_1 = require("./nGram");
 function getData(ref, dataOrUndef) {
     return __awaiter(this, void 0, void 0, function () {
@@ -228,7 +223,7 @@ var SearchQuery = /** @class */ (function () {
     SearchQuery.prototype.get = function () {
         var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var snap, charSnap, docs, charDocs, charDocs, refs, refToCount, refs_1, refs_1_1, hit, _count, count, hitData, data;
+            var snap, charSnap, docs, charDocs, refs, refToCount, refs_1, refs_1_1, hit, _count, count, hitData, data;
             var e_2, _b;
             return __generator(this, function (_c) {
                 switch (_c.label) {
@@ -245,49 +240,40 @@ var SearchQuery = /** @class */ (function () {
                             return [2 /*return*/, { hits: [], data: [] }];
                         if (charSnap === null || charSnap === void 0 ? void 0 : charSnap.empty)
                             return [2 /*return*/, { hits: [], data: [] }];
-                        if (snap instanceof firestore_1.QuerySnapshot && charSnap instanceof firestore_1.QuerySnapshot) {
-                            docs = snap.docs;
-                            charDocs = charSnap === null || charSnap === void 0 ? void 0 : charSnap.docs;
-                            if (charDocs)
-                                docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charDocs), false);
+                        docs = snap.docs;
+                        charDocs = charSnap === null || charSnap === void 0 ? void 0 : charSnap.docs;
+                        if (charDocs) {
+                            // @ts-ignore
+                            docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charDocs), false);
                         }
-                        else if (snap instanceof firebase_1.default.firestore.QuerySnapshot && charSnap instanceof firebase_1.default.firestore.QuerySnapshot) {
-                            docs = snap.docs;
-                            charDocs = charSnap === null || charSnap === void 0 ? void 0 : charSnap.docs;
-                            if (charDocs)
-                                docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charDocs), false);
+                        refs = docs.map(function (doc) { return doc.data().__ref; });
+                        refToCount = new Map();
+                        try {
+                            for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
+                                hit = refs_1_1.value;
+                                if (refToCount.has(hit)) {
+                                    _count = (_a = refToCount.get(hit)) !== null && _a !== void 0 ? _a : 0;
+                                    count = _count + 1;
+                                    refToCount.set(hit, count);
+                                }
+                                else {
+                                    refToCount.set(hit, 1);
+                                }
+                            }
                         }
-                        if (docs) {
-                            refs = docs.map(function (doc) { return doc.data().__ref; });
-                            refToCount = new Map();
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        finally {
                             try {
-                                for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
-                                    hit = refs_1_1.value;
-                                    if (refToCount.has(hit)) {
-                                        _count = (_a = refToCount.get(hit)) !== null && _a !== void 0 ? _a : 0;
-                                        count = _count + 1;
-                                        refToCount.set(hit, count);
-                                    }
-                                    else {
-                                        refToCount.set(hit, 1);
-                                    }
-                                }
+                                if (refs_1_1 && !refs_1_1.done && (_b = refs_1.return)) _b.call(refs_1);
                             }
-                            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                            finally {
-                                try {
-                                    if (refs_1_1 && !refs_1_1.done && (_b = refs_1.return)) _b.call(refs_1);
-                                }
-                                finally { if (e_2) throw e_2.error; }
-                            }
-                            hitData = Array.from(refToCount.entries()).map(function (_a) {
-                                var _b = __read(_a, 2), ref = _b[0], count = _b[1];
-                                return ({ ref: ref, count: count });
-                            });
-                            data = docs.map(function (doc) { return doc.data().values; });
-                            return [2 /*return*/, { hits: hitData, data: Array.from(new Set(data)) }];
+                            finally { if (e_2) throw e_2.error; }
                         }
-                        return [2 /*return*/, { hits: [], data: [] }];
+                        hitData = Array.from(refToCount.entries()).map(function (_a) {
+                            var _b = __read(_a, 2), ref = _b[0], count = _b[1];
+                            return ({ ref: ref, count: count });
+                        });
+                        data = docs.map(function (doc) { return doc.data().values; });
+                        return [2 /*return*/, { hits: hitData, data: Array.from(new Set(data)) }];
                 }
             });
         });
