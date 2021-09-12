@@ -163,12 +163,7 @@ export function parseQuery(stringQuery: string, options?: ParseOptions): SearchV
     const searchQuery: string[] = eachQuery
         .map(query => {
             if (query.length < _n) {
-                const chars: string[] = [];
-                for (let i = 0; i < _n; i++) {
-                    if (query[i])
-                        chars.push(query[i]);
-                }
-                return chars;
+                return query.split("");
             }
             return nGram(_n, query)
         })

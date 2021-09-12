@@ -275,12 +275,7 @@ function parseQuery(stringQuery, options) {
     var searchQuery = eachQuery
         .map(function (query) {
         if (query.length < _n) {
-            var chars = [];
-            for (var i = 0; i < _n; i++) {
-                if (query[i])
-                    chars.push(query[i]);
-            }
-            return chars;
+            return query.split("");
         }
         return (0, nGram_1.nGram)(_n, query);
     })
