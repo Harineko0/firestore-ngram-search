@@ -1,4 +1,4 @@
-import {CollectionReference, DocumentData, DocumentReference, FieldPath, Query,} from "@google-cloud/firestore";
+import {CollectionReference, DocumentData, DocumentReference, FieldPath, Query, QuerySnapshot} from "@google-cloud/firestore";
 import {fieldPaths, HitData, IndexEntity, SearchOptions, SearchResult} from "./index";
 import firebase from "firebase";
 import {nGram} from "./nGram";
@@ -147,25 +147,36 @@ export class SearchQuery {
         if (charSnap?.empty)
             return {hits: [], data: []};
 
-        let refs = snap.docs.map(doc => doc.data().__ref);
-        if (charSnap) {
-            const charRefs = charSnap.docs.map(doc => doc.data().__ref);
-            refs = [...refs, ...charRefs];
+        let docs;
+        if (snap instanceof QuerySnapshot && charSnap instanceof QuerySnapshot) {
+            docs = snap.docs;
+            const charDocs = charSnap?.docs;
+            if (charDocs)
+                docs = [...docs, ...charDocs];
+        } else if (snap instanceof firebase.firestore.QuerySnapshot && charSnap instanceof firebase.firestore.QuerySnapshot) {
+            docs = snap.docs;
+            const charDocs = charSnap?.docs;
+            if (charDocs)
+                docs = [...docs, ...charDocs];
         }
 
-        const refToCount: Map<DocumentReference, number> = new Map<DocumentReference, number>();
-        for (const hit of refs) {
-            if (refToCount.has(hit)) {
-                const _count = refToCount.get(hit) ?? 0;
-                const count = _count + 1;
-                refToCount.set(hit, count);
-            } else {
-                refToCount.set(hit, 1);
+        if (docs) {
+            let refs = docs.map(doc => doc.data().__ref);
+            const refToCount: Map<DocumentReference, number> = new Map<DocumentReference, number>();
+            for (const hit of refs) {
+                if (refToCount.has(hit)) {
+                    const _count = refToCount.get(hit) ?? 0;
+                    const count = _count + 1;
+                    refToCount.set(hit, count);
+                } else {
+                    refToCount.set(hit, 1);
+                }
             }
+            const hitData: HitData[] = Array.from(refToCount.entries()).map(([ref, count]) => ({ref: ref, count: count}));
+            const data = docs.map(doc => doc.data().values)
+            return {hits: hitData, data: Array.from(new Set(data))};
         }
-        const hitData: HitData[] = Array.from(refToCount.entries()).map(([ref, count]) => ({ref: ref, count: count}));
-        const data = snap.docs.map(doc => doc.data().values)
-        return {hits: hitData, data: Array.from(new Set(data))};
+        return {hits: [], data: []};
     }
 }
 
