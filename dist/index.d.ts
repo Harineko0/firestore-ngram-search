@@ -25,7 +25,6 @@ export declare type DeleteOptions = {
 };
 export declare type SearchOptions = {
     fields?: string[];
-    limit?: number;
     searchByChar?: boolean;
 };
 export declare type HitData = {
