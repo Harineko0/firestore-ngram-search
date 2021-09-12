@@ -31,10 +31,10 @@ export declare type SearchOptions = {
 export declare type HitData = {
     ref: DocumentReference;
     count: number;
+    data: DocumentData;
 };
 export declare type SearchResult = {
     hits: HitData[];
-    data: DocumentData[];
 };
 export default class FirestoreNGramSearch {
     private readonly db?;

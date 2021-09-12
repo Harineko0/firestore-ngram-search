@@ -84,12 +84,12 @@ export type SearchOptions = {
 export type HitData = {
     ref: DocumentReference;
     count: number;
+    data: DocumentData;
 }
 
 
 export type SearchResult = {
     hits: HitData[];
-    data: DocumentData[];
 }
 
 type IndexDocument = {

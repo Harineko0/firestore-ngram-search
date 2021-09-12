@@ -3,13 +3,13 @@ import {
     DocumentData,
     DocumentReference,
     FieldPath,
-    Query,
+    Query, QueryDocumentSnapshot,
     QuerySnapshot
 } from "@google-cloud/firestore";
 import {fieldPaths, HitData, IndexEntity, SearchOptions, SearchResult} from "./index";
 import firebase from "firebase";
 import {nGram} from "./utils/nGram";
-import {convertOneArray, removeDuplicate} from "./utils/array";
+import {convertOneArray} from "./utils/array";
 
 export async function getData(ref: DocumentReference, dataOrUndef?: DocumentData): Promise<DocumentData> {
     let data = dataOrUndef;
@@ -65,11 +65,12 @@ export class SearchQuery {
     private readonly n: number;
     private query: Query<IndexEntity> | firebase.firestore.Query<IndexEntity>;
     private charQuery?: Query<IndexEntity> | firebase.firestore.Query<IndexEntity>;
+    private existsNGramQuery: boolean = false;
 
     constructor(ref: CollectionReference<IndexEntity> | firebase.firestore.CollectionReference<IndexEntity>, n?: number) {
         this.ref = ref;
         this.n = n ?? 2;
-        this.query = ref;
+        this.query = this.ref;
     }
 
     where(fieldPath: string, opStr: WhereFilterOp, value: any): SearchQuery {
@@ -131,6 +132,8 @@ export class SearchQuery {
             _searchQuery.words.forEach(word => {
                 this.query = this.query.where(`${fieldPaths.tokens}.${word}`, "==", true);
             })
+            if (_searchQuery.words.length > 0)
+                this.existsNGramQuery = true;
         }
 
         const searchByChar = searchOptions?.searchByChar ?? true;
@@ -145,58 +148,51 @@ export class SearchQuery {
     }
 
     async get(): Promise<SearchResult> {
-        const snap = await this.query.get();
+        let snap: QuerySnapshot | firebase.firestore.QuerySnapshot | undefined;
+        if (this.existsNGramQuery)
+            snap = await this.query.get();
         let charSnap: QuerySnapshot | firebase.firestore.QuerySnapshot | undefined;
-        if (this.charQuery) {
+        if (this.charQuery)
             charSnap = await this.charQuery.get();
-        }
-        if (snap.empty)
-            return {hits: [], data: []};
-        if (charSnap?.empty)
-            return {hits: [], data: []};
 
-        let docs = snap.docs;
-        const charDocs = charSnap?.docs;
-        if (charDocs) {
+        if (snap && snap.empty)
+            return {hits: []};
+
+        let docs: QueryDocumentSnapshot[] | firebase.firestore.QueryDocumentSnapshot[] = [];
+        if (snap)
+            docs = snap.docs;
+        if (charSnap)
             // @ts-ignore
-            docs = [...docs, ...charDocs];
-        }
+            docs = [...docs, ...charSnap.docs];
 
-        let refs = docs.map(doc => doc.data().__ref);
         const idToCount: Map<string, number> = new Map<string, number>();
-        for (const ref of refs) {
-            let hasKey = false;
-            const ids = idToCount.keys();
-            for (const id of ids) {
-                if (id === ref.id) {{
-                    hasKey = true;
-                    break;
-                }}
-            }
-            if (hasKey) {
-                const _count = idToCount.get(ref.id) ?? 0;
-                const count = _count + 1;
-                idToCount.set(ref.id, count);
-            } else {
-                idToCount.set(ref.id, 1);
-            }
-        }
         const idToRef: Map<string, DocumentReference> = new Map<string, FirebaseFirestore.DocumentReference>();
-        const ids = idToCount.keys();
-        for (const id of ids) {
-            idToRef.set(id, refs.filter(ref => ref.id === id)[0]);
-        }
-        const hitData: HitData[] = Array.from(idToCount.entries())
-            .map(([id, count]) => {
-            const ref = idToRef.get(id);
-            if (ref) {
-                return ({ref: ref, count: count});
+        const idToData: Map<string, DocumentData> = new Map<string, FirebaseFirestore.DocumentData>();
+        docs.forEach(doc => {
+            const data = doc.data()
+
+            idToData.set(data.__ref.id, data.values);
+            idToRef.set(data.__ref.id, data.__ref);
+            if (idToCount.has(data.__ref.id)) {
+                const _count = idToCount.get(data.__ref.id) ?? 0;
+                const count = _count + 1;
+                idToCount.set(data.__ref.id, count);
+            } else {
+                idToCount.set(data.__ref.id, 1);
             }
-            return null;
+        })
+
+        const hitData: HitData[] = Array.from(idToCount.entries())
+            .map(([id, count]): HitData | null => {
+                const ref = idToRef.get(id);
+                const data = idToData.get(id);
+                if (ref && data) {
+                    return ({ref: ref, count: count, data: data});
+                }
+                return null;
             })
             .filter((value): value is HitData => value !== null);
-        const data = docs.map(doc => doc.data().values).filter(removeDuplicate);
-        return {hits: hitData, data: data};
+        return {hits: hitData};
     }
 }
 

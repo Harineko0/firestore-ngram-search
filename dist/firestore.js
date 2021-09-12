@@ -136,9 +136,10 @@ function docID(refID, field, n) {
 exports.docID = docID;
 var SearchQuery = /** @class */ (function () {
     function SearchQuery(ref, n) {
+        this.existsNGramQuery = false;
         this.ref = ref;
         this.n = n !== null && n !== void 0 ? n : 2;
-        this.query = ref;
+        this.query = this.ref;
     }
     SearchQuery.prototype.where = function (fieldPath, opStr, value) {
         this.query = this.query.where(fieldPath, opStr, value);
@@ -209,6 +210,8 @@ var SearchQuery = /** @class */ (function () {
             _searchQuery.words.forEach(function (word) {
                 _this.query = _this.query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
             });
+            if (_searchQuery.words.length > 0)
+                this.existsNGramQuery = true;
         }
         var searchByChar = (_a = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.searchByChar) !== null && _a !== void 0 ? _a : true;
         if (searchByChar) {
@@ -222,103 +225,60 @@ var SearchQuery = /** @class */ (function () {
         return this;
     };
     SearchQuery.prototype.get = function () {
-        var _a;
         return __awaiter(this, void 0, void 0, function () {
-            var snap, charSnap, docs, charDocs, refs, idToCount, refs_1, refs_1_1, ref, hasKey, ids_3, ids_1, ids_1_1, id, _count, count, idToRef, ids, _loop_1, ids_2, ids_2_1, id, hitData, data;
-            var e_2, _b, e_3, _c, e_4, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
-                    case 0: return [4 /*yield*/, this.query.get()];
+            var snap, charSnap, docs, idToCount, idToRef, idToData, hitData;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        if (!this.existsNGramQuery) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.query.get()];
                     case 1:
-                        snap = _e.sent();
-                        if (!this.charQuery) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this.charQuery.get()];
+                        snap = _a.sent();
+                        _a.label = 2;
                     case 2:
-                        charSnap = _e.sent();
-                        _e.label = 3;
+                        if (!this.charQuery) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.charQuery.get()];
                     case 3:
-                        if (snap.empty)
-                            return [2 /*return*/, { hits: [], data: [] }];
-                        if (charSnap === null || charSnap === void 0 ? void 0 : charSnap.empty)
-                            return [2 /*return*/, { hits: [], data: [] }];
-                        docs = snap.docs;
-                        charDocs = charSnap === null || charSnap === void 0 ? void 0 : charSnap.docs;
-                        if (charDocs) {
+                        charSnap = _a.sent();
+                        _a.label = 4;
+                    case 4:
+                        if (snap && snap.empty)
+                            return [2 /*return*/, { hits: [] }];
+                        docs = [];
+                        if (snap)
+                            docs = snap.docs;
+                        if (charSnap)
                             // @ts-ignore
-                            docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charDocs), false);
-                        }
-                        refs = docs.map(function (doc) { return doc.data().__ref; });
+                            docs = __spreadArray(__spreadArray([], __read(docs), false), __read(charSnap.docs), false);
                         idToCount = new Map();
-                        try {
-                            for (refs_1 = __values(refs), refs_1_1 = refs_1.next(); !refs_1_1.done; refs_1_1 = refs_1.next()) {
-                                ref = refs_1_1.value;
-                                hasKey = false;
-                                ids_3 = idToCount.keys();
-                                try {
-                                    for (ids_1 = (e_3 = void 0, __values(ids_3)), ids_1_1 = ids_1.next(); !ids_1_1.done; ids_1_1 = ids_1.next()) {
-                                        id = ids_1_1.value;
-                                        if (id === ref.id) {
-                                            {
-                                                hasKey = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                catch (e_3_1) { e_3 = { error: e_3_1 }; }
-                                finally {
-                                    try {
-                                        if (ids_1_1 && !ids_1_1.done && (_c = ids_1.return)) _c.call(ids_1);
-                                    }
-                                    finally { if (e_3) throw e_3.error; }
-                                }
-                                if (hasKey) {
-                                    _count = (_a = idToCount.get(ref.id)) !== null && _a !== void 0 ? _a : 0;
-                                    count = _count + 1;
-                                    idToCount.set(ref.id, count);
-                                }
-                                else {
-                                    idToCount.set(ref.id, 1);
-                                }
-                            }
-                        }
-                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                        finally {
-                            try {
-                                if (refs_1_1 && !refs_1_1.done && (_b = refs_1.return)) _b.call(refs_1);
-                            }
-                            finally { if (e_2) throw e_2.error; }
-                        }
                         idToRef = new Map();
-                        ids = idToCount.keys();
-                        _loop_1 = function (id) {
-                            idToRef.set(id, refs.filter(function (ref) { return ref.id === id; })[0]);
-                        };
-                        try {
-                            for (ids_2 = __values(ids), ids_2_1 = ids_2.next(); !ids_2_1.done; ids_2_1 = ids_2.next()) {
-                                id = ids_2_1.value;
-                                _loop_1(id);
+                        idToData = new Map();
+                        docs.forEach(function (doc) {
+                            var _a;
+                            var data = doc.data();
+                            idToData.set(data.__ref.id, data.values);
+                            idToRef.set(data.__ref.id, data.__ref);
+                            if (idToCount.has(data.__ref.id)) {
+                                var _count = (_a = idToCount.get(data.__ref.id)) !== null && _a !== void 0 ? _a : 0;
+                                var count = _count + 1;
+                                idToCount.set(data.__ref.id, count);
                             }
-                        }
-                        catch (e_4_1) { e_4 = { error: e_4_1 }; }
-                        finally {
-                            try {
-                                if (ids_2_1 && !ids_2_1.done && (_d = ids_2.return)) _d.call(ids_2);
+                            else {
+                                idToCount.set(data.__ref.id, 1);
                             }
-                            finally { if (e_4) throw e_4.error; }
-                        }
+                        });
                         hitData = Array.from(idToCount.entries())
                             .map(function (_a) {
                             var _b = __read(_a, 2), id = _b[0], count = _b[1];
                             var ref = idToRef.get(id);
-                            if (ref) {
-                                return ({ ref: ref, count: count });
+                            var data = idToData.get(id);
+                            if (ref && data) {
+                                return ({ ref: ref, count: count, data: data });
                             }
                             return null;
                         })
                             .filter(function (value) { return value !== null; });
-                        data = docs.map(function (doc) { return doc.data().values; }).filter(array_1.removeDuplicate);
-                        return [2 /*return*/, { hits: hitData, data: data }];
+                        return [2 /*return*/, { hits: hitData }];
                 }
             });
         });
