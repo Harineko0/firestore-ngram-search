@@ -202,22 +202,27 @@ var SearchQuery = /** @class */ (function () {
     SearchQuery.prototype.search = function (searchQuery, searchOptions) {
         var _this = this;
         var _a;
+        var _searchQuery = searchQuery.replace(/~/g, "")
+            .replace(/\*/g, "")
+            .replace(/\//g, "")
+            .replace(/\[/g, "")
+            .replace(/]/g, "");
         var fields = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.fields;
         if (fields)
             this.query = this.query.where(index_1.fieldPaths.tokens + "." + index_1.fieldPaths.field, "in", fields);
-        if (searchQuery) {
-            var _searchQuery = parseQuery(searchQuery, { n: this.n });
-            _searchQuery.words.forEach(function (word) {
+        if (_searchQuery) {
+            var _parseQuery = parseQuery(_searchQuery, { n: this.n });
+            _parseQuery.words.forEach(function (word) {
                 if (word !== '' && word !== ' ')
                     _this.query = _this.query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
             });
-            if (_searchQuery.words.length > 0)
+            if (_parseQuery.words.length > 0)
                 this.existsNGramQuery = true;
         }
         var searchByChar = (_a = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.searchByChar) !== null && _a !== void 0 ? _a : true;
         if (searchByChar) {
             this.charQuery = this.query;
-            var chars = splitSpace(searchQuery).map(function (value) { return value.split(''); }).reduce(array_1.convertOneArray, []);
+            var chars = splitSpace(_searchQuery).map(function (value) { return value.split(''); }).reduce(array_1.convertOneArray, []);
             chars.forEach(function (char) {
                 var _a;
                 if (char !== '')

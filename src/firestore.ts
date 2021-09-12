@@ -123,24 +123,30 @@ export class SearchQuery {
     }
 
     search(searchQuery: string, searchOptions?: SearchOptions): SearchQuery {
+        const _searchQuery = searchQuery.replace(/~/g, "")
+            .replace(/\*/g, "")
+            .replace(/\//g, "")
+            .replace(/\[/g, "")
+            .replace(/]/g, "")
+
         let fields = searchOptions?.fields;
         if (fields)
             this.query = this.query.where(`${fieldPaths.tokens}.${fieldPaths.field}`, "in", fields);
 
-        if (searchQuery) {
-            const _searchQuery = parseQuery(searchQuery, {n: this.n});
-            _searchQuery.words.forEach(word => {
+        if (_searchQuery) {
+            const _parseQuery = parseQuery(_searchQuery, {n: this.n});
+            _parseQuery.words.forEach(word => {
                 if (word !== '' && word !== ' ')
                     this.query = this.query.where(`${fieldPaths.tokens}.${word}`, "==", true);
             })
-            if (_searchQuery.words.length > 0)
+            if (_parseQuery.words.length > 0)
                 this.existsNGramQuery = true;
         }
 
         const searchByChar = searchOptions?.searchByChar ?? true;
         if (searchByChar) {
             this.charQuery = this.query;
-            const chars = splitSpace(searchQuery).map(value => value.split('')).reduce(convertOneArray, []);
+            const chars = splitSpace(_searchQuery).map(value => value.split('')).reduce(convertOneArray, []);
             chars.forEach(char => {
                 if (char !== '')
                     this.charQuery = this.charQuery?.where(`${fieldPaths.tokens}.${char}`, "==", true);
