@@ -123,31 +123,23 @@ export class SearchQuery {
     }
 
     search(searchQuery: string, searchOptions?: SearchOptions): SearchQuery {
-        const _searchQuery = searchQuery.replace(/~/g, "")
-            .replace(/\*/g, "")
-            .replace(/\//g, "")
-            .replace(/\[/g, "")
-            .replace(/]/g, "")
-
         let fields = searchOptions?.fields;
         if (fields)
             this.query = this.query.where(`${fieldPaths.tokens}.${fieldPaths.field}`, "in", fields);
 
-        if (_searchQuery) {
-            const _parseQuery = parseQuery(_searchQuery, {n: this.n});
-            _parseQuery.words.forEach(word => {
-                if (word !== '' && word !== ' ')
-                    this.query = this.query.where(`${fieldPaths.tokens}.${word}`, "==", true);
-            })
-            if (_parseQuery.words.length > 0)
-                this.existsNGramQuery = true;
-        }
+        const query = parseQuery(searchQuery, {n: this.n});
+        if (query.words.length > 0)
+            this.existsNGramQuery = true;
+        query.words.forEach(word => {
+            if (word !== '' && word !== ' ')
+                this.query = this.query.where(`${fieldPaths.tokens}.${word}`, "==", true);
+        })
 
         const searchByChar = searchOptions?.searchByChar ?? true;
         if (searchByChar) {
+            const charQuery = parseQuery(searchQuery, {n: 1});
             this.charQuery = this.query;
-            const chars = splitSpace(_searchQuery).map(value => value.split('')).reduce(convertOneArray, []);
-            chars.forEach(char => {
+            charQuery.words.forEach(char => {
                 if (char !== '')
                     this.charQuery = this.charQuery?.where(`${fieldPaths.tokens}.${char}`, "==", true);
             })
@@ -226,11 +218,20 @@ export type ParseOptions = {
 }
 function splitSpace(string: string): string[] {
     const eachQuery: string[] = string.split(' ');
-    return  eachQuery.filter(value => value !== '');
+    return eachQuery.filter(value => value !== '');
 }
-export function parseQuery(stringQuery: string, options?: ParseOptions): SearchValue {
+export function regulate(string: string): string {
+    return string
+        .replace(/~/g, "")
+        .replace(/\*/g, "")
+        .replace(/\//g, "")
+        .replace(/\[/g, "")
+        .replace(/]/g, "");
+}
+function parseQuery(stringQuery: string, options?: ParseOptions): SearchValue {
     const _n = options?.n ?? 2;
-    const eachQuery: string[] = splitSpace(stringQuery);
+    const _stringQuery = regulate(stringQuery);
+    const eachQuery: string[] = splitSpace(_stringQuery);
     const searchQuery: string[] = eachQuery.map(query =>  nGram(_n, query)).reduce(convertOneArray, []);
     return {words: searchQuery};
 }

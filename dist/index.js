@@ -123,10 +123,11 @@ var ClientIndexEntityConverter = {
 };
 function getIndexDocument(docRef, field, data, n) {
     var tokens = new Map();
-    var nGrams = (0, nGram_1.nGram)(n, data[field]);
-    nGrams.forEach(function (nGram) {
-        if (!nGram.startsWith("__"))
-            tokens.set(nGram, true);
+    var fieldValue = (0, firestore_2.regulate)(data[field]);
+    var nGrams = (0, nGram_1.nGram)(n, fieldValue);
+    nGrams.forEach(function (word) {
+        if (!word.startsWith("__"))
+            tokens.set(word, true);
     });
     tokens.set(exports.fieldPaths.field, field);
     var entity = {

@@ -30,5 +30,5 @@ export declare type SearchValue = {
 export declare type ParseOptions = {
     n?: number;
 };
-export declare function parseQuery(stringQuery: string, options?: ParseOptions): SearchValue;
+export declare function regulate(string: string): string;
 export {};

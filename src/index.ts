@@ -7,7 +7,7 @@ import {
 } from '@google-cloud/firestore';
 import firebase from "firebase";
 import {nGram} from "./utils/nGram"
-import {docID, getData, getTargetFields, SearchQuery} from "./firestore";
+import {docID, getData, getTargetFields, regulate, SearchQuery} from "./firestore";
 import {WriteBatch2} from "./batch";
 
 export interface IndexEntity {
@@ -99,10 +99,11 @@ type IndexDocument = {
 
 function getIndexDocument(docRef: DocumentReference, field: string, data: DocumentData, n: number): IndexDocument {
     const tokens = new Map<string, string | boolean>();
-    const nGrams = nGram(n, data[field]);
-    nGrams.forEach(nGram => {
-        if (!nGram.startsWith("__"))
-            tokens.set(nGram, true);
+    const fieldValue = regulate(data[field]);
+    const nGrams = nGram(n, fieldValue);
+    nGrams.forEach(word => {
+        if (!word.startsWith("__"))
+            tokens.set(word, true);
     })
     tokens.set(fieldPaths.field, field);
 

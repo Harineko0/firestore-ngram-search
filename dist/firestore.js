@@ -72,7 +72,7 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     return to.concat(ar || Array.prototype.slice.call(from));
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseQuery = exports.startsWith = exports.SearchQuery = exports.docID = exports.getTargetFields = exports.getData = void 0;
+exports.regulate = exports.startsWith = exports.SearchQuery = exports.docID = exports.getTargetFields = exports.getData = void 0;
 var index_1 = require("./index");
 var nGram_1 = require("./utils/nGram");
 var array_1 = require("./utils/array");
@@ -202,28 +202,21 @@ var SearchQuery = /** @class */ (function () {
     SearchQuery.prototype.search = function (searchQuery, searchOptions) {
         var _this = this;
         var _a;
-        var _searchQuery = searchQuery.replace(/~/g, "")
-            .replace(/\*/g, "")
-            .replace(/\//g, "")
-            .replace(/\[/g, "")
-            .replace(/]/g, "");
         var fields = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.fields;
         if (fields)
             this.query = this.query.where(index_1.fieldPaths.tokens + "." + index_1.fieldPaths.field, "in", fields);
-        if (_searchQuery) {
-            var _parseQuery = parseQuery(_searchQuery, { n: this.n });
-            _parseQuery.words.forEach(function (word) {
-                if (word !== '' && word !== ' ')
-                    _this.query = _this.query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
-            });
-            if (_parseQuery.words.length > 0)
-                this.existsNGramQuery = true;
-        }
+        var query = parseQuery(searchQuery, { n: this.n });
+        if (query.words.length > 0)
+            this.existsNGramQuery = true;
+        query.words.forEach(function (word) {
+            if (word !== '' && word !== ' ')
+                _this.query = _this.query.where(index_1.fieldPaths.tokens + "." + word, "==", true);
+        });
         var searchByChar = (_a = searchOptions === null || searchOptions === void 0 ? void 0 : searchOptions.searchByChar) !== null && _a !== void 0 ? _a : true;
         if (searchByChar) {
+            var charQuery = parseQuery(searchQuery, { n: 1 });
             this.charQuery = this.query;
-            var chars = splitSpace(_searchQuery).map(function (value) { return value.split(''); }).reduce(array_1.convertOneArray, []);
-            chars.forEach(function (char) {
+            charQuery.words.forEach(function (char) {
                 var _a;
                 if (char !== '')
                     _this.charQuery = (_a = _this.charQuery) === null || _a === void 0 ? void 0 : _a.where(index_1.fieldPaths.tokens + "." + char, "==", true);
@@ -307,11 +300,20 @@ function splitSpace(string) {
     var eachQuery = string.split(' ');
     return eachQuery.filter(function (value) { return value !== ''; });
 }
+function regulate(string) {
+    return string
+        .replace(/~/g, "")
+        .replace(/\*/g, "")
+        .replace(/\//g, "")
+        .replace(/\[/g, "")
+        .replace(/]/g, "");
+}
+exports.regulate = regulate;
 function parseQuery(stringQuery, options) {
     var _a;
     var _n = (_a = options === null || options === void 0 ? void 0 : options.n) !== null && _a !== void 0 ? _a : 2;
-    var eachQuery = splitSpace(stringQuery);
+    var _stringQuery = regulate(stringQuery);
+    var eachQuery = splitSpace(_stringQuery);
     var searchQuery = eachQuery.map(function (query) { return (0, nGram_1.nGram)(_n, query); }).reduce(array_1.convertOneArray, []);
     return { words: searchQuery };
 }
-exports.parseQuery = parseQuery;
